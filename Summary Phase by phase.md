@@ -8,3 +8,17 @@
 
 \*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*
 
+
+
+Day : 3 is done. Here's what you shipped today:
+
+
+
+* Created a Slack bot from scratch
+* Authenticated it to your workspace
+* Built a get\_slack\_messages() MCP tool that reads from a real channel
+* Filters messages by keyword so it only returns relevant ones
+* Connected it to real data — found an actual message you posted
+
+
+

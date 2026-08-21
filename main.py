@@ -1,4 +1,4 @@
-from src.tools.jira import get_ticket_details
+from src.tools.slack import get_slack_messages
 
-result = get_ticket_details("SUP-1")
+result = get_slack_messages("binding")
 print(result)
