@@ -1,4 +1,4 @@
-from src.tools.slack import get_slack_messages
+from src.tools.confluence import search_confluence
 
-result = get_slack_messages("binding")
+result = search_confluence("binding")
 print(result)
