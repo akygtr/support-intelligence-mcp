@@ -2,3 +2,5 @@
 __pycache__/
 *.pyc
 .ipynb_checkpoints
+gmail_credentials.json
+gmail_token.json
