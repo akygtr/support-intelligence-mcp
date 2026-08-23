@@ -1,52 +1,254 @@
+"""
+Support Intelligence MCP Server
+================================
+A FastMCP server that automates B2B technical support triage.
+Connects Jira, Slack, Confluence, Gmail, and Snowflake into a single
+diagnose → summarize → draft workflow.
+
+Run standalone:   python main.py
+Claude Desktop:   see claude_desktop_config.json
+"""
+
+import json
+from pydantic import BaseModel, Field, ConfigDict
+from mcp.server.fastmcp import FastMCP
+
+# Import all tool modules — each registers its own tools on its own mcp instance,
+# but we also call their core functions directly for the orchestration tool below.
 from src.tools.jira import get_ticket_details
 from src.tools.slack import get_slack_messages
 from src.tools.confluence import search_confluence
+from src.tools.gmail import search_gmail, GmailSearchInput
+from src.tools.snowflake import query_customer_data, CustomerQueryInput
 
-def diagnose_ticket(ticket_id: str) -> dict:
-    """
-    Full support workflow:
-    1. Fetch ticket details from Jira
-    2. Search Slack for related messages
-    3. Search Confluence for related documentation
-    4. Return everything combined
-    """
-    print(f"\n--- Fetching Jira ticket {ticket_id} ---")
-    ticket = get_ticket_details(ticket_id)
-    
-    if "error" in ticket:
-        return {"error": f"Could not fetch ticket: {ticket['error']}"}
-    
-    # use ticket summary as search keyword
-    keyword = ticket["summary"]
-    print(f"Ticket summary: {keyword}")
-    
-    print(f"\n--- Searching Slack for '{keyword}' ---")
-    slack_results = get_slack_messages(keyword)
-    
-    print(f"\n--- Searching Confluence for '{keyword}' ---")
-    confluence_results = search_confluence(keyword)
-    
-    # combine everything into one response
-    return {
-        "ticket": ticket,
-        "slack": slack_results,
-        "confluence": confluence_results
+# Single FastMCP server — all tools live here for Claude Desktop
+mcp = FastMCP("support_intelligence_mcp")
+
+
+# ── Re-export individual tools so Claude Desktop sees them ──────────────────
+
+@mcp.tool(
+    name="get_jira_ticket",
+    annotations={
+        "title": "Get Jira Ticket Details",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": False
     }
+)
+async def get_jira_ticket(ticket_id: str) -> str:
+    """Fetch full details for a Jira support ticket by ID.
 
+    Args:
+        ticket_id (str): Jira ticket ID e.g. 'SUP-1', 'SUP-42'
+
+    Returns:
+        str: JSON with ticket_id, summary, status, priority, description,
+             reporter, and created date. Returns error key on failure.
+    """
+    result = await get_ticket_details(ticket_id)
+    return json.dumps(result, indent=2)
+
+
+@mcp.tool(
+    name="get_slack_messages",
+    annotations={
+        "title": "Search Slack Support Channel",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": False
+    }
+)
+async def slack_search(keyword: str) -> str:
+    """Search recent Slack messages in the support-tickets channel by keyword.
+
+    Reads last 20 messages and filters by keyword (case-insensitive).
+
+    Args:
+        keyword (str): Word or phrase to match against message text
+
+    Returns:
+        str: JSON with matched messages including text, timestamp, and user ID.
+    """
+    result = await get_slack_messages(keyword)
+    return json.dumps(result, indent=2)
+
+
+@mcp.tool(
+    name="search_confluence",
+    annotations={
+        "title": "Search Confluence Knowledge Base",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": False
+    }
+)
+async def confluence_search(query: str) -> str:
+    """Search Confluence pages for technical documentation and meeting notes.
+
+    Uses CQL full-text search across all pages in the workspace.
+
+    Args:
+        query (str): Search terms e.g. 'OPC-UA binding', 'KEPServerEX migration'
+
+    Returns:
+        str: JSON with matching pages including title, page_id, excerpt, and URL.
+    """
+    result = await search_confluence(query)
+    return json.dumps(result, indent=2)
+
+
+@mcp.tool(
+    name="search_gmail",
+    annotations={
+        "title": "Search Gmail for Customer Emails",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": False
+    }
+)
+async def gmail_search(query: str, max_results: int = 5) -> str:
+    """Search Gmail for emails related to a support issue.
+
+    Supports full Gmail search syntax (from:, subject:, etc.)
+
+    Args:
+        query (str): Search query e.g. 'broken binding OPC-UA', 'from:customer@acme.com'
+        max_results (int): Max emails to return (default 5, max 20)
+
+    Returns:
+        str: JSON with matching emails including subject, sender, date, and body preview.
+    """
+    params = GmailSearchInput(query=query, max_results=max_results)
+    return await search_gmail(params)
+
+
+@mcp.tool(
+    name="query_customer_data",
+    annotations={
+        "title": "Query Customer Account Data from Snowflake",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": False
+    }
+)
+async def snowflake_customer(customer_name: str, max_results: int = 5) -> str:
+    """Look up customer account info from Snowflake by company name.
+
+    Returns account details, contract status, and customer history.
+
+    Args:
+        customer_name (str): Company name (partial match supported)
+        max_results (int): Max records to return (default 5)
+
+    Returns:
+        str: JSON with matching customer records from Snowflake CUSTOMERS table.
+    """
+    params = CustomerQueryInput(customer_name=customer_name, max_results=max_results)
+    return await query_customer_data(params)
+
+
+# ── Orchestration: full 5-source diagnostic workflow ───────────────────────
+
+class DiagnoseInput(BaseModel):
+    """Input model for the full diagnostic workflow tool."""
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        validate_assignment=True,
+        extra="forbid"
+    )
+
+    ticket_id: str = Field(
+        ...,
+        description="Jira ticket ID to diagnose e.g. 'SUP-1'",
+        min_length=1,
+        max_length=50
+    )
+    customer_name: str = Field(
+        default="",
+        description="Optional customer/company name for Snowflake lookup. If blank, extracted from ticket.",
+        max_length=200
+    )
+
+
+@mcp.tool(
+    name="diagnose_ticket",
+    annotations={
+        "title": "Full Ticket Diagnostic — All 5 Sources",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": False
+    }
+)
+async def diagnose_ticket(params: DiagnoseInput) -> str:
+    """Run a full support ticket diagnostic across all 5 data sources.
+
+    Workflow:
+        1. Fetch Jira ticket details
+        2. Use ticket summary as search keyword
+        3. Search Slack for related messages
+        4. Search Confluence for related documentation
+        5. Search Gmail for related customer emails
+        6. Pull Snowflake customer account data
+
+    Args:
+        params (DiagnoseInput): Validated input with:
+            - ticket_id (str): Jira ticket ID e.g. 'SUP-1'
+            - customer_name (str): Optional company name for Snowflake lookup
+
+    Returns:
+        str: JSON with combined results from all sources:
+            {
+                "ticket": { ...jira fields... },
+                "slack": { ...matching messages... },
+                "confluence": { ...matching pages... },
+                "gmail": { ...matching emails... },
+                "snowflake": { ...customer records... }
+            }
+    """
+    # Step 1: Jira
+    ticket = get_ticket_details(params.ticket_id)
+
+    if "error" in ticket:
+        return json.dumps({"error": f"Jira fetch failed: {ticket['error']}"})
+
+    # Step 2: Extract keyword from ticket summary
+    keyword = ticket.get("summary", params.ticket_id)
+
+    # Step 3: Slack
+    slack = get_slack_messages(keyword)
+
+    # Step 4: Confluence
+    confluence = search_confluence(keyword)
+
+    # Step 5: Gmail
+    gmail_params = GmailSearchInput(query=keyword, max_results=5)
+    gmail_raw = await search_gmail(gmail_params)
+    gmail = json.loads(gmail_raw)
+
+    # Step 6: Snowflake — use provided customer_name or fall back to ticket reporter
+    lookup_name = params.customer_name or ticket.get("reporter", keyword)
+    sf_params = CustomerQueryInput(customer_name=lookup_name, max_results=5)
+    snowflake_raw = await query_customer_data(sf_params)
+    snowflake = json.loads(snowflake_raw)
+
+    return json.dumps({
+        "ticket": ticket,
+        "slack": slack,
+        "confluence": confluence,
+        "gmail": gmail,
+        "snowflake": snowflake
+    }, indent=2)
+
+
+# ── Entry point ────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    result = diagnose_ticket("SUP-1")
-    
-    print("\n========= DIAGNOSIS RESULT =========")
-    print(f"Ticket: {result['ticket']['summary']}")
-    print(f"Status: {result['ticket']['status']}")
-    print(f"Priority: {result['ticket']['priority']}")
-    print(f"Description: {result['ticket']['description']}")
-    
-    print(f"\nSlack messages found: {result['slack'].get('total', 0)}")
-    for msg in result['slack'].get('results', []):
-        print(f"  - {msg['text']}")
-    
-    print(f"\nConfluence pages found: {result['confluence'].get('total', 0)}")
-    for page in result['confluence'].get('results', []):
-        print(f"  - {page['title']}: {page['url']}")
+    # stdio transport — required for Claude Desktop
+    mcp.run()
