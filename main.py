@@ -213,7 +213,7 @@ async def diagnose_ticket(params: DiagnoseInput) -> str:
             }
     """
     # Step 1: Jira
-    ticket = get_ticket_details(params.ticket_id)
+    ticket = await get_ticket_details(params.ticket_id)
 
     if "error" in ticket:
         return json.dumps({"error": f"Jira fetch failed: {ticket['error']}"})
@@ -222,10 +222,10 @@ async def diagnose_ticket(params: DiagnoseInput) -> str:
     keyword = ticket.get("summary", params.ticket_id)
 
     # Step 3: Slack
-    slack = get_slack_messages(keyword)
+    slack = await get_slack_messages(keyword)
 
     # Step 4: Confluence
-    confluence = search_confluence(keyword)
+    confluence = await search_confluence(keyword)
 
     # Step 5: Gmail
     gmail_params = GmailSearchInput(query=keyword, max_results=5)

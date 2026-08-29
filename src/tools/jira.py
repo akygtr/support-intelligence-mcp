@@ -12,7 +12,7 @@ JIRA_BASE_URL = os.getenv("JIRA_BASE_URL")
 mcp = FastMCP("support_intelligence_mcp")
 
 @mcp.tool()
-def get_ticket_details(ticket_id: str) -> dict:
+async def get_ticket_details(ticket_id: str) -> dict:
     """
     Fetch details of a Jira support ticket by ticket ID.
     Returns summary, status, priority, description and reporter.

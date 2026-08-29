@@ -11,7 +11,7 @@ SLACK_SUPPORT_CHANNEL = "C0BJRG60X8X"
 mcp = FastMCP("support_intelligence_mcp")
 
 @mcp.tool()
-def get_slack_messages(keyword: str) -> dict:
+async def get_slack_messages(keyword: str) -> dict:
     """
     Fetch recent messages from the support-tickets Slack channel.
     Filters messages containing the keyword and returns matches.
