@@ -1,0 +1,16 @@
+{
+  "customer_name": "OPC",
+  "count": 1,
+  "records": [
+    {
+      "ID": 5,
+      "NAME": "Carlos Rivera",
+      "COMPANY": "OPC Systems",
+      "EMAIL": "carlos@example.com",
+      "CONTRACT_STATUS": "Active",
+      "PLAN": "Enterprise",
+      "ACCOUNT_MANAGER": "Sarah Lee",
+      "CREATED_DATE": "2024-08-01"
+    }
+  ]
+}
