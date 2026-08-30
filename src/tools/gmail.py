@@ -105,7 +105,7 @@ class GmailSearchInput(BaseModel):
         "openWorldHint": False
     }
 )
-async def search_gmail(params: GmailSearchInput) -> str:
+async def search_gmail(params: GmailSearchInput, ticket_id: str = "") -> str:
     """Search Gmail for emails matching a keyword or query.
 
     Supports full Gmail search syntax. Returns subject, sender, date,
@@ -121,7 +121,7 @@ async def search_gmail(params: GmailSearchInput) -> str:
             - message_id, subject, sender, date, snippet, body_preview
     """
     if is_mock():
-        return json.dumps(load("gmail", params.query))
+        return json.dumps(load("gmail", ticket_id or params.query))
     try:
         service = _get_gmail_service()
 

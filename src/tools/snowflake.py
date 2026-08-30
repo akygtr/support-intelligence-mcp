@@ -83,14 +83,14 @@ class RawQueryInput(BaseModel):
 @mcp.tool(
     name="query_customer_data",
     annotations={
-        "title": "Query Customer Data from Snowflake",
+        "title": "Query Customer Account Data",
         "readOnlyHint": True,
         "destructiveHint": False,
         "idempotentHint": True,
         "openWorldHint": False
     }
 )
-async def query_customer_data(params: CustomerQueryInput) -> str:
+async def query_customer_data(params: CustomerQueryInput, ticket_id: str = "") -> str:
     """Look up customer account info from Snowflake by company name.
 
     Searches the CUSTOMERS table for matching accounts and returns
@@ -100,6 +100,7 @@ async def query_customer_data(params: CustomerQueryInput) -> str:
         params (CustomerQueryInput): Validated input with:
             - customer_name (str): Company name to search (partial match)
             - max_results (int): Max rows to return (default 5)
+        ticket_id (str): Optional. Used to select the fixture in mock mode.
 
     Returns:
         str: JSON with matching customer records. Each record contains
@@ -107,32 +108,35 @@ async def query_customer_data(params: CustomerQueryInput) -> str:
              Returns empty list if no matches found.
     """
     if is_mock():
-        return json.dumps(load("snowflake", params.customer_name))
+        return json.dumps(load("snowflake", ticket_id or params.customer_name))
+
     try:
-            sql = """
-                SELECT *
-                FROM CUSTOMERS
-                WHERE UPPER(NAME) LIKE UPPER(%s)
-                OR UPPER(COMPANY) LIKE UPPER(%s)
-                LIMIT %s
-            """
-            rows = _run_query(sql, (f"%{params.customer_name}%", f"%{params.customer_name}%", params.max_results))
-
-            serializable = []
-            for row in rows:
-                serializable.append({k: str(v) if not isinstance(v, (str, int, float, bool, type(None))) else v
-                                    for k, v in row.items()})
-
-            return json.dumps({
-                "customer_name": params.customer_name,
-                "count": len(serializable),
-                "records": serializable
-            }, indent=2)
-
+        sql = """
+            SELECT *
+            FROM CUSTOMERS
+            WHERE UPPER(NAME) LIKE UPPER(%s)
+            OR UPPER(COMPANY) LIKE UPPER(%s)
+            LIMIT %s
+        """
+        rows = _run_query(
+            sql,
+            (f"%{params.customer_name}%", f"%{params.customer_name}%", params.max_results)
+        )
+        serializable = []
+        for row in rows:
+            serializable.append({
+                k: str(v) if not isinstance(v, (str, int, float, bool, type(None))) else v
+                for k, v in row.items()
+            })
+        return json.dumps({
+            "customer_name": params.customer_name,
+            "count": len(serializable),
+            "records": serializable
+        }, indent=2)
     except ValueError as e:
-            return json.dumps({"error": str(e)})
+        return json.dumps({"error": str(e)})
     except Exception as e:
-            return json.dumps({"error": f"Snowflake query failed: {str(e)}"})
+        return json.dumps({"error": f"Snowflake query failed: {str(e)}"})
 
 
 @mcp.tool(
@@ -160,26 +164,21 @@ async def run_snowflake_query(params: RawQueryInput) -> str:
              plus row count. Returns error if query is not SELECT.
     """
     if not params.sql.strip().upper().startswith("SELECT"):
-        return json.dumps({"error": "Only SELECT queries are allowed. Write/delete operations are blocked."})
+        return json.dumps({"error": "Only SELECT queries are permitted."})
 
     try:
         rows = _run_query(params.sql)
-
         serializable = []
         for row in rows:
-            serializable.append({k: str(v) if not isinstance(v, (str, int, float, bool, type(None))) else v
-                                  for k, v in row.items()})
-
+            serializable.append({
+                k: str(v) if not isinstance(v, (str, int, float, bool, type(None))) else v
+                for k, v in row.items()
+            })
         return json.dumps({
             "count": len(serializable),
             "rows": serializable
         }, indent=2)
-
     except ValueError as e:
         return json.dumps({"error": str(e)})
     except Exception as e:
         return json.dumps({"error": f"Snowflake query failed: {str(e)}"})
-
-
-if __name__ == "__main__":
-    mcp.run()

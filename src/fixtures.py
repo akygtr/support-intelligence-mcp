@@ -10,9 +10,10 @@ def is_mock() -> bool:
     return os.getenv("MOCK", "").lower() == "true"
 
 
-def load(source: str, key: str) -> dict:
-    """Load a canned response. Returns an error shape if the fixture is missing."""
-    slug = key.lower().replace(" ", "-")
+def load(source: str, ticket_id: str) -> dict:
+    """Load a canned response for a ticket. Fixtures are keyed by ticket id
+    so one ticket maps to exactly one set of source responses."""
+    slug = ticket_id.lower().replace(" ", "-")
     path = FIXTURES / f"{source}_{slug}.json"
     if not path.exists():
         return {

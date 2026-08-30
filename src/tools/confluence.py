@@ -13,13 +13,13 @@ CONFLUENCE_BASE_URL = "https://kuakshara28-1787334845421.atlassian.net/wiki"
 mcp = FastMCP("support_intelligence_mcp")
 
 @mcp.tool()
-async def search_confluence(query: str) -> dict:
+async def search_confluence(query: str, ticket_id: str = "") -> dict:
     """
     Search Confluence pages by keyword.
     Returns matching page titles and excerpts relevant to the query.
     """
     if is_mock():
-        return load("confluence", query) 
+        return load("confluence", ticket_id or query) 
     response = requests.get(
         f"{CONFLUENCE_BASE_URL}/rest/api/content/search",
         auth=(CONFLUENCE_EMAIL, CONFLUENCE_API_TOKEN),

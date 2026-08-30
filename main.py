@@ -222,20 +222,20 @@ async def diagnose_ticket(params: DiagnoseInput) -> str:
     keyword = ticket.get("summary", params.ticket_id)
 
     # Step 3: Slack
-    slack = await get_slack_messages(keyword)
+    slack = await get_slack_messages(keyword, params.ticket_id)
 
     # Step 4: Confluence
-    confluence = await search_confluence(keyword)
+    confluence = await search_confluence(keyword, params.ticket_id)
 
     # Step 5: Gmail
     gmail_params = GmailSearchInput(query=keyword, max_results=5)
-    gmail_raw = await search_gmail(gmail_params)
+    gmail_raw = await search_gmail(gmail_params, params.ticket_id)
     gmail = json.loads(gmail_raw)
 
     # Step 6: Snowflake — use provided customer_name or fall back to ticket reporter
     lookup_name = params.customer_name or ticket.get("reporter", keyword)
     sf_params = CustomerQueryInput(customer_name=lookup_name, max_results=5)
-    snowflake_raw = await query_customer_data(sf_params)
+    snowflake_raw = await query_customer_data(sf_params, params.ticket_id)
     snowflake = json.loads(snowflake_raw)
 
     return json.dumps({
