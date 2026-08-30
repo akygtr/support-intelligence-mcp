@@ -1,0 +1,9 @@
+{
+  "ticket_id": "SUP-9",
+  "summary": "customer not found in the account database; ticket detail ex",
+  "status": "Open",
+  "priority": "Medium",
+  "description": "customer not found in the account database; ticket detail exists but no account context is available",
+  "reporter": "Support Engineer",
+  "created": "2026-08-19T20:06:33.699-0700"
+}

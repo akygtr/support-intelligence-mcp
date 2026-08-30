@@ -17,7 +17,7 @@ FIXTURES = ROOT / "fixtures"
 GOLDEN = ROOT / "evals" / "golden_set.jsonl"
 
 # Hand-written cases. The generator must not overwrite these.
-SKIP = {"eval_13", "eval_14", "eval_15", "eval_16", "eval_17", "eval_18", "eval_20"}
+SKIP = {"eval_01", "eval_13", "eval_14", "eval_15", "eval_16", "eval_17", "eval_18", "eval_20"}
 
 EMPTY = {"results": [], "total": 0}
 
@@ -100,11 +100,11 @@ def snowflake(case: dict) -> dict:
 
 
 BUILDERS = {
-    "jira": (jira, lambda c: c["ticket_id"]),
-    "slack": (slack, lambda c: c["expected_root_cause"][:30]),
-    "confluence": (confluence, lambda c: c["expected_root_cause"][:30]),
-    "gmail": (gmail, lambda c: c["expected_root_cause"][:30]),
-    "snowflake": (snowflake, lambda c: c["customer_name"]),
+    "jira": jira,
+    "slack": slack,
+    "confluence": confluence,
+    "gmail": gmail,
+    "snowflake": snowflake,
 }
 
 
@@ -119,10 +119,10 @@ def main() -> None:
 
         required = set(case.get("required_sources", []))
 
-        for source, (build, key_of) in BUILDERS.items():
+        for source, build in BUILDERS.items():
             # Jira always exists — every ticket has one.
             payload = build(case) if (source in required or source == "jira") else EMPTY
-            path = FIXTURES / f"{source}_{slug(key_of(case))}.json"
+            path = FIXTURES / f"{source}_{slug(case['ticket_id'])}.json"
             path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
             written += 1
 

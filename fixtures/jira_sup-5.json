@@ -1,0 +1,9 @@
+{
+  "ticket_id": "SUP-5",
+  "summary": "polling rate set too aggressively for the device, saturating",
+  "status": "Open",
+  "priority": "Medium",
+  "description": "polling rate set too aggressively for the device, saturating the channel and causing read timeouts",
+  "reporter": "Support Engineer",
+  "created": "2026-08-19T20:06:33.699-0700"
+}

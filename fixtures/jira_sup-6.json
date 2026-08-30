@@ -1,0 +1,9 @@
+{
+  "ticket_id": "SUP-6",
+  "summary": "two drivers configured against the same device caused confli",
+  "status": "Open",
+  "priority": "Medium",
+  "description": "two drivers configured against the same device caused conflicting writes and inconsistent tag values",
+  "reporter": "Support Engineer",
+  "created": "2026-08-19T20:06:33.699-0700"
+}

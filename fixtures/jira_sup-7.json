@@ -1,0 +1,9 @@
+{
+  "ticket_id": "SUP-7",
+  "summary": "OPC UA subscription dropped after a network interruption and",
+  "status": "Open",
+  "priority": "Medium",
+  "description": "OPC UA subscription dropped after a network interruption and did not re-establish; no internal discussion exists yet",
+  "reporter": "Support Engineer",
+  "created": "2026-08-19T20:06:33.699-0700"
+}

@@ -1,0 +1,9 @@
+{
+  "ticket_id": "SUP-4",
+  "summary": "tag addresses became invalid after the PLC IP address change",
+  "status": "Open",
+  "priority": "Medium",
+  "description": "tag addresses became invalid after the PLC IP address changed during a network migration",
+  "reporter": "Support Engineer",
+  "created": "2026-08-19T20:06:33.699-0700"
+}

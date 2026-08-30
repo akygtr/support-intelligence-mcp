@@ -1,0 +1,9 @@
+{
+  "ticket_id": "SUP-10",
+  "summary": "insufficient information to determine root cause; ticket des",
+  "status": "Open",
+  "priority": "Medium",
+  "description": "insufficient information to determine root cause; ticket describes intermittent disconnects with no logs, timestamps, or reproduction steps",
+  "reporter": "Support Engineer",
+  "created": "2026-08-19T20:06:33.699-0700"
+}

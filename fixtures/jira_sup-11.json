@@ -1,0 +1,9 @@
+{
+  "ticket_id": "SUP-11",
+  "summary": "insufficient information; one-line ticket saying it stopped ",
+  "status": "Open",
+  "priority": "Medium",
+  "description": "insufficient information; one-line ticket saying it stopped working, no source has corroborating detail",
+  "reporter": "Support Engineer",
+  "created": "2026-08-19T20:06:33.699-0700"
+}

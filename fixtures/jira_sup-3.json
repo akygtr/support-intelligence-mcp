@@ -1,0 +1,9 @@
+{
+  "ticket_id": "SUP-3",
+  "summary": "OPC UA client certificate expired and was not renewed, so th",
+  "status": "Open",
+  "priority": "Medium",
+  "description": "OPC UA client certificate expired and was not renewed, so the secure channel handshake fails",
+  "reporter": "Support Engineer",
+  "created": "2026-08-19T20:06:33.699-0700"
+}

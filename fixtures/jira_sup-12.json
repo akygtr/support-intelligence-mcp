@@ -1,0 +1,9 @@
+{
+  "ticket_id": "SUP-12",
+  "summary": "insufficient information; symptoms are consistent with sever",
+  "status": "Open",
+  "priority": "Medium",
+  "description": "insufficient information; symptoms are consistent with several unrelated causes and cannot be narrowed without diagnostic logs",
+  "reporter": "Support Engineer",
+  "created": "2026-08-19T20:06:33.699-0700"
+}

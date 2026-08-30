@@ -1,0 +1,9 @@
+{
+  "ticket_id": "SUP-19",
+  "summary": "device read failures after a firmware update; the account lo",
+  "status": "Open",
+  "priority": "Medium",
+  "description": "device read failures after a firmware update; the account lookup errored so entitlement and plan tier are unknown",
+  "reporter": "Support Engineer",
+  "created": "2026-08-19T20:06:33.699-0700"
+}

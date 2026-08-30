@@ -1,0 +1,9 @@
+{
+  "ticket_id": "SUP-8",
+  "summary": "device returns bad quality on a subset of tags; Jira and Sla",
+  "status": "Open",
+  "priority": "Medium",
+  "description": "device returns bad quality on a subset of tags; Jira and Slack have detail but no Confluence documentation exists",
+  "reporter": "Support Engineer",
+  "created": "2026-08-19T20:06:33.699-0700"
+}

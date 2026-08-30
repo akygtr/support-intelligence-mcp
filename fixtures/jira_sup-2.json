@@ -1,0 +1,9 @@
+{
+  "ticket_id": "SUP-2",
+  "summary": "OPC UA server hit its concurrent session limit, new clients ",
+  "status": "Open",
+  "priority": "Medium",
+  "description": "OPC UA server hit its concurrent session limit, new clients rejected past the configured maximum",
+  "reporter": "Support Engineer",
+  "created": "2026-08-19T20:06:33.699-0700"
+}

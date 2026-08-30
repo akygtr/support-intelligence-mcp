@@ -1,0 +1,16 @@
+{
+  "customer_name": "Meridian Foods",
+  "count": 1,
+  "records": [
+    {
+      "ID": 1,
+      "NAME": "Account Contact",
+      "COMPANY": "Meridian Foods",
+      "EMAIL": "contact@example.com",
+      "CONTRACT_STATUS": "Active",
+      "PLAN": "Enterprise",
+      "ACCOUNT_MANAGER": "Account Manager",
+      "CREATED_DATE": "2024-08-01"
+    }
+  ]
+}
