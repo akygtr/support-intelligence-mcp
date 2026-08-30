@@ -27,6 +27,59 @@ diagnose ticket SUP-1 for customer OPC
 
 ---
 
+## Quickstart
+
+Runs with zero credentials in mock mode. All five sources return canned fixtures from `/fixtures`.
+
+**1. Clone and install**
+
+```bash
+git clone https://github.com/akygtr/support-intelligence-mcp.git
+cd support-intelligence-mcp
+pip install -r requirements.txt
+```
+
+**2. Enable mock mode**
+
+```bash
+cp .env.example .env
+```
+
+`MOCK=true` is already set. Leave the API keys blank.
+
+**3. Register with Claude Desktop**
+
+Add to `claude_desktop_config.json`:
+
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "support-intelligence": {
+      "command": "python",
+      "args": ["<ABSOLUTE_PATH>/support-intelligence-mcp/main.py"],
+      "env": {
+        "PYTHONPATH": "<ABSOLUTE_PATH>/support-intelligence-mcp"
+      }
+    }
+  }
+}
+```
+
+Replace `<ABSOLUTE_PATH>`. On Windows use escaped backslashes and point `command` at your `python.exe` if it isn't on PATH.
+
+**4. Restart Claude Desktop, then ask:**
+
+> Diagnose ticket SUP-1 for customer OPC
+
+### Running against live systems
+
+Set `MOCK=false` in `.env` and fill in credentials. Gmail also needs `gmail_credentials.json` from a Google Cloud OAuth desktop client. Both files are gitignored.
+
+---
+
 ## Architecture
 
 ```
@@ -172,3 +225,19 @@ gmail_token.json
 ```
 
 These contain credentials and are gitignored. See setup instructions above.
+
+## Security
+
+All credentials load from a gitignored `.env`. An OAuth client secret was committed early in development; it was rotated in Google Cloud and purged from git history with `git-filter-repo`. Fixture mode exists partly so the project can be demoed and tested with no credentials present.
+
+---
+
+## Roadmap
+
+- [x] Five-source diagnostic orchestration
+- [x] Fixture mode, runs with zero credentials
+- [ ] Eval harness: golden set, faithfulness and hallucination metrics
+- [ ] Tracing, cost and latency observability
+- [ ] Agentic loop, model selects sources instead of fixed sequence
+- [ ] Prompt injection and PII guardrails
+- [ ] Semantic retrieval over Confluence
