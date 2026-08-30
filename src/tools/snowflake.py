@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic import BaseModel, Field, ConfigDict
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
-
+from src.fixtures import is_mock, load
 import snowflake.connector
 
 load_dotenv()
@@ -106,6 +106,8 @@ async def query_customer_data(params: CustomerQueryInput) -> str:
              whatever columns exist in your CUSTOMERS table.
              Returns empty list if no matches found.
     """
+    if is_mock():
+        return json.dumps(load("snowflake", params.customer_name))
     try:
             sql = """
                 SELECT *

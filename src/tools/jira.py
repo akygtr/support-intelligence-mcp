@@ -2,6 +2,7 @@ import requests
 import os
 from dotenv import load_dotenv
 from fastmcp import FastMCP
+from src.fixtures import is_mock, load
 
 load_dotenv()
 
@@ -17,6 +18,8 @@ async def get_ticket_details(ticket_id: str) -> dict:
     Fetch details of a Jira support ticket by ticket ID.
     Returns summary, status, priority, description and reporter.
     """
+    if is_mock():
+        return load("jira", ticket_id)  
     url = f"{JIRA_BASE_URL}/rest/api/3/issue/{ticket_id}"
 
     response = requests.get(

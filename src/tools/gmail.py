@@ -5,6 +5,7 @@ from typing import Optional, List
 from pydantic import BaseModel, Field, ConfigDict
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
+from src.fixtures import is_mock, load
 
 # Google OAuth / API
 from google.oauth2.credentials import Credentials
@@ -119,6 +120,8 @@ async def search_gmail(params: GmailSearchInput) -> str:
         str: JSON with list of matching emails, each containing:
             - message_id, subject, sender, date, snippet, body_preview
     """
+    if is_mock():
+        return json.dumps(load("gmail", params.query))
     try:
         service = _get_gmail_service()
 

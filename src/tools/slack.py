@@ -2,6 +2,7 @@ import requests
 import os
 from dotenv import load_dotenv
 from fastmcp import FastMCP
+from src.fixtures import is_mock, load
 
 load_dotenv()
 
@@ -16,6 +17,8 @@ async def get_slack_messages(keyword: str) -> dict:
     Fetch recent messages from the support-tickets Slack channel.
     Filters messages containing the keyword and returns matches.
     """
+    if is_mock():
+        return load("slack", keyword)
     response = requests.get(
         "https://slack.com/api/conversations.history",
         headers={"Authorization": f"Bearer {SLACK_BOT_TOKEN}"},

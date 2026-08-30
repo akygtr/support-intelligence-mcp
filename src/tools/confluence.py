@@ -2,6 +2,7 @@ import requests
 import os
 from dotenv import load_dotenv
 from fastmcp import FastMCP
+from src.fixtures import is_mock, load
 
 load_dotenv()
 
@@ -17,6 +18,8 @@ async def search_confluence(query: str) -> dict:
     Search Confluence pages by keyword.
     Returns matching page titles and excerpts relevant to the query.
     """
+    if is_mock():
+        return load("confluence", query) 
     response = requests.get(
         f"{CONFLUENCE_BASE_URL}/rest/api/content/search",
         auth=(CONFLUENCE_EMAIL, CONFLUENCE_API_TOKEN),
