@@ -1,0 +1,9 @@
+{
+  "ticket_id": "SUP-13",
+  "summary": "Devices unresponsive following Tuesday maintenance window",
+  "status": "Open",
+  "priority": "High",
+  "description": "Customer reports all OPC UA devices went unresponsive after the Tuesday maintenance window. Firmware was updated to 4.2.1 on the gateway that morning. Suspect the firmware update is the cause.",
+  "reporter": "Support Engineer",
+  "created": "2026-08-19T20:06:33.699-0700"
+}

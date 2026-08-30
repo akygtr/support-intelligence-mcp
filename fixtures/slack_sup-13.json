@@ -1,0 +1,15 @@
+{
+  "results": [
+    {
+      "text": "Re: Aldercrest outage - it was not the firmware. I checked, the gateway config was changed the same morning, someone pushed a new security policy that blocks the OPC UA port. Firmware 4.2.1 has been running fine at three other sites.",
+      "timestamp": "1787334451.246929",
+      "user": "U000000000"
+    },
+    {
+      "text": "Agreed, the timing overlaps but the config push is the more likely culprit. We should not close this as a firmware issue.",
+      "timestamp": "1787334999.111222",
+      "user": "U000000001"
+    }
+  ],
+  "total": 2
+}

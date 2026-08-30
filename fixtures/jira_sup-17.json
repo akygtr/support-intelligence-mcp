@@ -1,0 +1,9 @@
+{
+  "ticket_id": "SUP-17",
+  "summary": "Serial device driver timing out on reads",
+  "status": "Open",
+  "priority": "Medium",
+  "description": "Customer reports the serial driver timing out on read requests to a legacy RS-485 device. Started yesterday, no recent config changes reported.",
+  "reporter": "Support Engineer",
+  "created": "2026-08-19T20:06:33.699-0700"
+}

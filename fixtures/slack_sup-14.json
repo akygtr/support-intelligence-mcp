@@ -1,0 +1,15 @@
+{
+  "results": [
+    {
+      "text": "Meridian just called, packaging line 2 is fully down. All 14 devices are showing bad quality, not just PLC-207. The ticket understates this badly.",
+      "timestamp": "1787334451.246929",
+      "user": "U000000000"
+    },
+    {
+      "text": "Confirmed on the call, entire line is stopped. Production impact since 06:00.",
+      "timestamp": "1787335100.333444",
+      "user": "U000000001"
+    }
+  ],
+  "total": 2
+}

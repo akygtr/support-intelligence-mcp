@@ -1,0 +1,9 @@
+{
+  "ticket_id": "SUP-18",
+  "summary": "Certificate trust failure between client and server",
+  "status": "Open",
+  "priority": "High",
+  "description": "OPC UA secure channel fails to establish. Client rejects the server certificate as untrusted. Customer says they emailed screenshots of the error dialog.",
+  "reporter": "Support Engineer",
+  "created": "2026-08-19T20:06:33.699-0700"
+}

@@ -1,0 +1,10 @@
+{
+  "results": [
+    {
+      "text": "Meridian certificate issue - the server cert is not in the client trust store. They may have rebuilt the client machine.",
+      "timestamp": "1787334451.246929",
+      "user": "U000000000"
+    }
+  ],
+  "total": 1
+}

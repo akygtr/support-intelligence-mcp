@@ -1,0 +1,9 @@
+{
+  "ticket_id": "SUP-15",
+  "summary": "Redundancy failover not triggering on secondary server",
+  "status": "Open",
+  "priority": "High",
+  "description": "Customer reports automatic failover to the secondary server is not triggering. Handling under active support agreement, standard SLA applies.",
+  "reporter": "Support Engineer",
+  "created": "2026-08-19T20:06:33.699-0700"
+}

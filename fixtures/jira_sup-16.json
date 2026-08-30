@@ -1,0 +1,9 @@
+{
+  "ticket_id": "SUP-16",
+  "summary": "Tag bindings broken after controller hardware swap",
+  "status": "Open",
+  "priority": "Medium",
+  "description": "Customer replaced the controller hardware over the weekend. All tag bindings now resolve to invalid addresses and reads fail.",
+  "reporter": "Support Engineer",
+  "created": "2026-08-19T20:06:33.699-0700"
+}

@@ -1,0 +1,9 @@
+{
+  "ticket_id": "SUP-20",
+  "summary": "Dropped reads under high tag count on channel 3",
+  "status": "Open",
+  "priority": "High",
+  "description": "Customer added 4000 tags to channel 3 last week. Reads are now dropping intermittently and scan rates are not being met.",
+  "reporter": "Support Engineer",
+  "created": "2026-08-19T20:06:33.699-0700"
+}

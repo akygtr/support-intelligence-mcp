@@ -1,0 +1,9 @@
+{
+  "ticket_id": "SUP-14",
+  "summary": "Single device showing bad quality on packaging line 2",
+  "status": "Open",
+  "priority": "Medium",
+  "description": "Customer reports one device, PLC-207, returning bad quality tags on packaging line 2. Other devices on the line appear unaffected. Isolated issue.",
+  "reporter": "Support Engineer",
+  "created": "2026-08-19T20:06:33.699-0700"
+}

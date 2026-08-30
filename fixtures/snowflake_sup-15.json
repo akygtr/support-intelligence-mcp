@@ -1,0 +1,17 @@
+{
+  "customer_name": "Northvale Utilities",
+  "count": 1,
+  "records": [
+    {
+      "ID": 11,
+      "NAME": "Dana Whitfield",
+      "COMPANY": "Northvale Utilities",
+      "EMAIL": "contact@example.com",
+      "CONTRACT_STATUS": "Expired",
+      "CONTRACT_END_DATE": "2026-05-31",
+      "PLAN": "Standard",
+      "ACCOUNT_MANAGER": "Account Manager",
+      "CREATED_DATE": "2023-02-14"
+    }
+  ]
+}
