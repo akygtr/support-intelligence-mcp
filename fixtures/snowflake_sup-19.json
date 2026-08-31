@@ -1,4 +1,3 @@
 {
-  "results": [],
-  "total": 0
+  "error": "Snowflake query failed: 250001 (08001): Failed to connect to DB. Verify the account name is correct."
 }
