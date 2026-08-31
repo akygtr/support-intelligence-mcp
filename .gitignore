@@ -11,3 +11,5 @@ corpus/*.pdf
 # Never commit customer data exports
 *Solved Cases*
 *Salesforce*
+
+evals/.diagnosis_cache/
