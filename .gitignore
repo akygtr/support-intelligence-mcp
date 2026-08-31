@@ -4,3 +4,10 @@ __pycache__/
 .ipynb_checkpoints
 gmail_credentials.json
 gmail_token.json
+
+# RAG corpus - PTC copyrighted manuals, download separately
+corpus/*.pdf
+
+# Never commit customer data exports
+*Solved Cases*
+*Salesforce*
