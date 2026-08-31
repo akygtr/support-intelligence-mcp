@@ -1,4 +1,5 @@
 # Support Intelligence MCP Server
+![Evals](https://github.com/akygtr/support-intelligence-mcp/actions/workflows/evals.yml/badge.svg)
 
 A Model Context Protocol (MCP) server that automates B2B technical support triage by pulling from 5 real data sources into a single diagnostic workflow — callable directly from Claude Desktop.
 
@@ -236,7 +237,7 @@ All credentials load from a gitignored `.env`. An OAuth client secret was commit
 
 - [x] Five-source diagnostic orchestration
 - [x] Fixture mode, runs with zero credentials
-- [ ] Eval harness: golden set, faithfulness and hallucination metrics
+- [x] Eval harness: golden set, 100 fixtures, retrieval metrics, CI
 - [ ] Tracing, cost and latency observability
 - [ ] Agentic loop, model selects sources instead of fixed sequence
 - [ ] Prompt injection and PII guardrails
