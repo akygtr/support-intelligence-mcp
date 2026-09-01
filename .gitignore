@@ -13,3 +13,5 @@ corpus/*.pdf
 *Salesforce*
 
 evals/.diagnosis_cache/
+
+traces/*.jsonl
