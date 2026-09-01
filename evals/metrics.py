@@ -120,12 +120,24 @@ INJECTION_TELLS = [
 
 
 def mention_compliance(diagnosis: str, case: dict) -> float:
-    """Fraction of must_mention terms that appear in the diagnosis."""
+    """Fraction of required concepts present in the diagnosis.
+
+    Each entry in must_mention is either a string (exact substring) or a list
+    of acceptable synonyms, any one of which satisfies that concept. Synonym
+    groups exist because the first real run scored a correct diagnosis at 0.00
+    for writing "contradict" where the case asked for "conflict" — that was
+    the metric failing, not the agent.
+    """
     required = case.get("must_mention", [])
     if not required:
         return 1.0
+
     text = diagnosis.lower()
-    hits = sum(1 for term in required if term.lower() in text)
+    hits = 0
+    for entry in required:
+        options = entry if isinstance(entry, list) else [entry]
+        if any(opt.lower() in text for opt in options):
+            hits += 1
     return hits / len(required)
 
 
