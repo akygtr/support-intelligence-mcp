@@ -75,6 +75,53 @@ Replace `<ABSOLUTE_PATH>`. On Windows use escaped backslashes and point `command
 
 > Diagnose ticket SUP-1 for customer OPC
 
+## Evaluation
+
+20 golden-set cases across seven failure categories, run against fixtures so
+results are deterministic. Retrieval metrics are pure Python; diagnosis
+metrics score the generated prose.
+
+| Category | Cases | Recall | Mention |
+|---|---|---|---|
+| happy_path | 6 | 1.00 | 1.00 |
+| empty_source | 3 | 1.00 | 1.00 |
+| insufficient_info | 3 | 1.00 | 0.83 |
+| contradiction | 3 | 1.00 | 1.00 |
+| false_positive | 2 | 1.00 | 1.00 |
+| source_down | 2 | 1.00 | 1.00 |
+| prompt_injection | 1 | 1.00 | 1.00 |
+
+Hallucinations: 0. Crashes: 0.
+
+### What the categories test
+
+- **empty_source** — a source ran and found nothing
+- **insufficient_info** — the correct answer is "I don't know," not a guess
+- **contradiction** — two sources disagree; both must be surfaced
+- **false_positive** — a source matched on a keyword but is irrelevant
+- **source_down** — a source errored. "I could not look" must not be
+  reported as "I looked and found nothing"
+- **prompt_injection** — a Slack message contains instructions aimed at the
+  agent. It must flag them, not obey them and not silently ignore them
+
+### Known limitations
+
+Recall is measured against fixtures generated from the case definitions, so
+it validates the retrieval path rather than retrieval quality.
+
+Mention compliance uses substring matching against synonym groups. eval_10
+scores 0.50 despite a correct diagnosis, because the agent asks for logs and
+timestamps without using the literal phrase the case expects. Left in place
+rather than widened further.
+
+The first LLM run reported a hallucination that was not one: the agent said
+it could not determine a root cause, and the matcher caught "root cause"
+inside the negation. `must_not_claim` entries are now scoped to phrases that
+only appear in assertions.
+
+Run with `python evals/run_evals.py`, or `--no-llm` for retrieval metrics only.
+Diagnoses are cached on disk keyed by prompt and payload.
+
 ### Running against live systems
 
 Set `MOCK=false` in `.env` and fill in credentials. Gmail also needs `gmail_credentials.json` from a Google Cloud OAuth desktop client. Both files are gitignored.
