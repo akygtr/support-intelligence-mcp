@@ -11,6 +11,7 @@ import time
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from src.trace import span
 
 load_dotenv()
 
@@ -57,11 +58,19 @@ def call_llm(prompt: str, system: str = "", attempts: int = 3) -> str:
     for attempt in range(attempts):
         _throttle()
         try:
-            response = client.models.generate_content(
-                model=MODEL,
-                contents=prompt,
-                config=config,
-            )
+            with span(MODEL, kind="llm") as sp:
+                response = client.models.generate_content(
+                    model=MODEL,
+                    contents=prompt,
+                    config=config,
+                )
+                usage = getattr(response, "usage_metadata", None)
+                if usage:
+                    sp.record(
+                        tokens_in=getattr(usage, "prompt_token_count", 0),
+                        tokens_out=getattr(usage, "candidates_token_count", 0),
+                    )
+                sp.record(attempt=attempt + 1)
             return response.text
         except Exception as e:
             last_error = e
