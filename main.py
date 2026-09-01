@@ -263,7 +263,7 @@ async def diagnose_ticket(params: DiagnoseInput) -> str:
     with span("gmail", kind="tool") as sp:
         gmail_raw = await search_gmail(gmail_params, params.ticket_id)
         sp.record(bytes=len(gmail_raw), **_source_health(gmail_raw))
-
+    gmail = json.loads(gmail_raw)
     # Step 6: Snowflake — use provided customer_name or fall back to ticket reporter
     lookup_name = params.customer_name or ticket.get("reporter", keyword)
     sf_params = CustomerQueryInput(customer_name=lookup_name, max_results=5)

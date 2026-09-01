@@ -9,7 +9,8 @@ needs surfacing.
 
 Diagnoses are cached on disk keyed by the prompt and the source payload.
 Identical input produces identical output, so regenerating it every run
-buys nothing and costs quota.
+buys nothing and costs quota. Cache hits are traced too, otherwise the
+observability layer is blind to the thing saving the most money.
 """
 
 import hashlib
@@ -17,6 +18,7 @@ import json
 from pathlib import Path
 
 from src.llm import call_llm
+from src.trace import span
 
 CACHE = Path(__file__).parent.parent / "evals" / ".diagnosis_cache"
 
@@ -66,6 +68,8 @@ def write_diagnosis(sources: dict, use_cache: bool = True) -> str:
     cached = CACHE / f"{key}.txt"
 
     if use_cache and cached.exists():
+        with span("diagnosis_cache", kind="cache") as sp:
+            sp.record(hit=True)
         return cached.read_text(encoding="utf-8")
 
     result = call_llm(TEMPLATE.format(payload=payload), system=SYSTEM)
