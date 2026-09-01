@@ -27,4 +27,4 @@ jobs:
         env:
           MOCK: "true"
           PYTHONPATH: ${{ github.workspace }}
-          run: python evals/run_evals.py --no-llm
+        run: python evals/run_evals.py --no-llm
