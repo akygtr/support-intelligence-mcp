@@ -9,6 +9,7 @@ import asyncio
 import json
 import os
 import sys
+
 from collections import defaultdict
 from pathlib import Path
 
@@ -19,6 +20,7 @@ sys.path.insert(0, str(ROOT))
 os.environ["MOCK"] = "true"
 
 from evals.metrics import score_case, score_diagnosis  # noqa: E402
+from evals.judge import judge_claims  # noqa: E402
 from src.diagnose import write_diagnosis  # noqa: E402
 from main import diagnose_ticket, DiagnoseInput  # noqa: E402
 
@@ -55,6 +57,13 @@ async def main() -> int:
             row = score_case(sources, case)
             if with_llm:
                 row.update(score_diagnosis(diagnosis, case))
+                # The substring matcher over-reports: it cannot tell an
+                # assertion from a denial. The judge confirms which flagged
+                # claims the diagnosis actually makes.
+                flagged = row.get("hallucinations", [])
+                if flagged:
+                    row["hallucinations_raw"] = flagged
+                    row["hallucinations"] = judge_claims(diagnosis, flagged)
                 row["diagnosis"] = diagnosis
             scores.append(row)
         except Exception as e:
