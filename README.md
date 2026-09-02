@@ -78,20 +78,64 @@ Replace `<ABSOLUTE_PATH>`. On Windows use escaped backslashes and point `command
 ## Evaluation
 
 20 golden-set cases across seven failure categories, run against fixtures so
-results are deterministic. Retrieval metrics are pure Python; diagnosis
-metrics score the generated prose.
+results are deterministic. Retrieval metrics are pure Python. Diagnosis
+metrics score generated prose, with an LLM judge for claim verification.
 
-| Category | Cases | Recall | Mention |
-|---|---|---|---|
-| happy_path | 6 | 1.00 | 1.00 |
-| empty_source | 3 | 1.00 | 1.00 |
-| insufficient_info | 3 | 1.00 | 0.83 |
-| contradiction | 3 | 1.00 | 1.00 |
-| false_positive | 2 | 1.00 | 1.00 |
-| source_down | 2 | 1.00 | 1.00 |
-| prompt_injection | 1 | 1.00 | 1.00 |
+| Category | Cases | Recall | Mention | Hallucinations |
+|---|---|---|---|---|
+| happy_path | 6 | 1.00 | 1.00 | 0 |
+| empty_source | 3 | 1.00 | 0.67 | 0 |
+| insufficient_info | 3 | 1.00 | 0.50 | 0 |
+| contradiction | 3 | 1.00 | 1.00 | 0 |
+| false_positive | 2 | 1.00 | 1.00 | 0 |
+| source_down | 2 | 1.00 | 1.00 | 0 |
+| prompt_injection | 1 | 1.00 | 1.00 | 0 |
 
-Hallucinations: 0. Crashes: 0.
+Model: claude-haiku-4-5. Cost per full run: $0.0025. Cost per case: $0.00012.
+Mean model latency 4.0s, p95 5.4s. Retrieval is 0.1% of wall time; generation
+is the rest.
+
+### What the categories test
+
+- **empty_source** — a source ran and found nothing
+- **insufficient_info** — the correct answer is "I don't know," not a guess
+- **contradiction** — two sources disagree; the disagreement must be addressed
+- **false_positive** — a source matched on a keyword but is irrelevant
+- **source_down** — a source errored. "I could not look" must not be reported
+  as "I looked and found nothing"
+- **prompt_injection** — a Slack message contains instructions aimed at the
+  agent. It must flag them, not obey them and not silently ignore them
+
+### Why there is a judge
+
+Substring matching cannot tell an assertion from a denial. Swapping the
+diagnosis model surfaced this: three correct diagnoses were flagged as
+hallucinations for writing *"the root cause is not the firmware"*, asking
+*"was this user error?"*, and declining to cite a document as *"too generic
+to confirm"*. All three were the metric failing, not the agent.
+
+`must_not_claim` entries are now propositions rather than keyword fragments,
+and an LLM judge decides whether the diagnosis actually asserts them. The
+judge only runs on claims the cheap matcher flags, so it costs one call per
+suspect case rather than one per case.
+
+### Known limitations
+
+Recall is measured against fixtures generated from the case definitions, so
+it validates the retrieval path rather than retrieval quality.
+
+`must_mention` is still substring matching and has the same weakness the
+judge was built to fix. eval_09 and eval_11 score 0.00 with correct
+diagnoses, because the agent wrote "the ticket cannot be diagnosed" and "any
+diagnosis would be guessing" where the case expected "insufficient" or
+"cannot determine". Judging these is the next change.
+
+The golden set was written and tuned against one model. Changing models moves
+the scores even where reasoning quality is comparable — a reason to prefer
+judged criteria over literal ones.
+
+Run with `python evals/run_evals.py`, or `--no-llm` for retrieval metrics
+only. Diagnoses are cached on disk keyed by prompt and payload.
 
 ### What the categories test
 
