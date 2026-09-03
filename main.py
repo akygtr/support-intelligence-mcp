@@ -21,6 +21,7 @@ from src.tools.confluence import search_confluence
 from src.tools.gmail import search_gmail, GmailSearchInput
 from src.tools.snowflake import query_customer_data, CustomerQueryInput
 from src.trace import span, start_run
+from src.redact import redact
 
 # Single FastMCP server — all tools live here for Claude Desktop
 mcp = FastMCP("support_intelligence_mcp")
@@ -237,7 +238,7 @@ async def diagnose_ticket(params: DiagnoseInput) -> str:
 
     # Step 1: Jira
     with span("jira", kind="tool") as sp:
-        ticket = await get_ticket_details(params.ticket_id)
+        ticket = redact(await get_ticket_details(params.ticket_id))
         sp.record(bytes=len(json.dumps(ticket)), **_source_health(ticket))
 
     if "error" in ticket:
@@ -248,13 +249,13 @@ async def diagnose_ticket(params: DiagnoseInput) -> str:
 
     # Step 3: Slack
     with span("slack", kind="tool") as sp:
-        slack = await get_slack_messages(keyword, params.ticket_id)
+        slack = redact(await get_slack_messages(keyword, params.ticket_id))
         sp.record(bytes=len(json.dumps(slack)), hits=slack.get("total", 0),
                   **_source_health(slack))
 
     # Step 4: Confluence
     with span("confluence", kind="tool") as sp:
-        confluence = await search_confluence(keyword, params.ticket_id)
+        confluence = redact(await search_confluence(keyword, params.ticket_id))
         sp.record(bytes=len(json.dumps(confluence)), hits=confluence.get("total", 0),
                   **_source_health(confluence))
 
@@ -263,14 +264,15 @@ async def diagnose_ticket(params: DiagnoseInput) -> str:
     with span("gmail", kind="tool") as sp:
         gmail_raw = await search_gmail(gmail_params, params.ticket_id)
         sp.record(bytes=len(gmail_raw), **_source_health(gmail_raw))
-    gmail = json.loads(gmail_raw)
+    gmail = redact(json.loads(gmail_raw))
+
     # Step 6: Snowflake — use provided customer_name or fall back to ticket reporter
     lookup_name = params.customer_name or ticket.get("reporter", keyword)
     sf_params = CustomerQueryInput(customer_name=lookup_name, max_results=5)
     with span("snowflake", kind="tool") as sp:
         snowflake_raw = await query_customer_data(sf_params, params.ticket_id)
         sp.record(bytes=len(snowflake_raw), **_source_health(snowflake_raw))
-    snowflake = json.loads(snowflake_raw)
+    snowflake = redact(json.loads(snowflake_raw))
 
     return json.dumps({
         "ticket": ticket,
