@@ -476,8 +476,10 @@ All credentials load from a gitignored `.env`. An OAuth client secret was commit
 
 - [x] Five-source diagnostic orchestration
 - [x] Fixture mode, runs with zero credentials
-- [x] Eval harness: golden set, 100 fixtures, retrieval metrics, CI
-- [ ] Tracing, cost and latency observability
-- [ ] Agentic loop, model selects sources instead of fixed sequence
-- [ ] Prompt injection and PII guardrails
-- [ ] Semantic retrieval over Confluence
+- [x] Eval harness: golden set, 100 fixtures, retrieval and diagnosis metrics, LLM judge, CI
+- [x] Tracing, warehouse sink, and cost/latency dashboard
+- [x] Agentic loop, model selects sources instead of fixed sequence
+- [x] Guardrails: read-only enforcement, PII redaction, output validation, injection detection
+- [ ] Semantic retrieval over documentation
+- [ ] Prompt caching and cost reduction
+- [ ] Write actions with an approval gate
