@@ -171,6 +171,100 @@ Diagnoses are cached on disk keyed by prompt and payload.
 Set `MOCK=false` in `.env` and fill in credentials. Gmail also needs `gmail_credentials.json` from a Google Cloud OAuth desktop client. Both files are gitignored.
 
 ---
+## Observability
+
+Every tool call and model call is traced. Spans are written as JSONL, loaded
+into a SQL warehouse, and read by a Power BI dashboard.
+
+![Dashboard](dashboard/dashboard.png)
+
+### What the traces capture
+
+Each span records duration, whether the call completed, and per-kind detail:
+bytes and hit counts for tools, token counts and provider for model calls.
+
+Call completion and source health are tracked separately. The tools return
+errors as data rather than raising, so a span that did not throw is not
+evidence the source worked — without that distinction the dashboard would
+report 100% health while Gmail was dead on an expired token.
+
+### What it showed
+
+Retrieval across five systems is 0.1% of wall time. The model call is
+effectively the entire latency budget — 4.0s mean, 5.4s p95, against roughly
+0.5ms per source fetch. That inverts where the optimisation effort belongs.
+
+Cost is $0.0025 per full 20-case run on claude-haiku-4-5, and the run-to-run
+comparison makes the diagnosis cache visible: a fully cached run costs
+essentially nothing.
+
+### Stack
+
+Traces land in SQL Server. The loader is warehouse-agnostic — the connection
+string is the only warehouse-specific detail, and the same code targets
+Snowflake or Postgres with a config change. Views in `evals/create_views.py`
+shape the spans for the dashboard.
+
+```
+python evals/run_evals.py       # generates traces/run_*.jsonl
+python evals/trace_report.py    # terminal summary
+python -m src.warehouse         # load newest trace into SQL
+```
+
+
+## Fixed sequence vs agentic loop
+
+The original `diagnose_ticket` queries all five sources in a fixed order every
+time. The sequence is decided before the ticket is read, which makes it a
+workflow rather than an agent.
+
+`src/agent.py` lets the model choose. It reads the ticket, picks which sources
+are worth querying, reads what came back, and decides whether it has enough.
+Both paths remain in the codebase and are scored against the same golden set.
+
+### Result over 20 cases
+
+| | Fixed | Agentic |
+|---|---|---|
+| Tool calls | 100 | 87 |
+| Source coverage | 1.00 | 1.00 |
+| Hallucinations | 0 | 0 |
+| Mean iterations | 1 | 2.3 |
+
+13% fewer tool calls with no source ever skipped.
+
+### Coverage exists because the other metrics could not catch a miss
+
+An agent that skips a source can still produce a diagnosis that reads well,
+because the skipped source might have been empty. Nothing in the text-based
+metrics would notice. Coverage checks `required_sources` against what the
+agent actually queried, so a saving that came at the cost of correctness would
+show up. It has not: coverage is 1.00 across all 20 cases.
+
+### The first version was worse than no agent
+
+The initial prompt told the model to query with reason but gave it no cost
+signal and no guidance on empty results. It queried all four sources, then
+re-queried them with different keywords when they came back empty — 71 calls
+against the fixed path's 60. Six of twelve cases repeated a search that had
+already returned nothing.
+
+Two additions fixed it: an explicit four-call budget, and stating that an
+empty result is information rather than a failed search. That moved it from
+18% more calls to 13% fewer.
+
+### Single runs are not measurements
+
+eval_20 scored 0.00 on mention compliance in one run and 1.00 in the next,
+with identical fixtures and no code change — the agent chose different
+phrasing. The tool-call reduction is stable across runs; the quality delta is
+not, and a single run should not be reported as though it were.
+
+```
+python evals/compare_paths.py                          # all 20 cases
+python evals/compare_paths.py --limit=5                # first 5
+python evals/compare_paths.py --only=eval_14,eval_20   # specific cases
+```
 
 ## Architecture
 
