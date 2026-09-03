@@ -266,6 +266,60 @@ python evals/compare_paths.py --limit=5                # first 5
 python evals/compare_paths.py --only=eval_14,eval_20   # specific cases
 ```
 
+## Guardrails
+
+The system reads Slack messages, Confluence pages, and customer email, then
+puts them in front of a model. That is untrusted input reaching something that
+can act, so the defences are layered rather than trusting any single one.
+
+### Read-only enforcement
+
+The raw SQL tool accepts SELECT only. That constraint lives in a Pydantic
+validator, not the function body — the original check sat inside the function,
+where an editing mistake deleted it partway through this project and nothing
+failed until it was noticed by hand. A validator rejects the input before the
+function is entered. It also blocks statement chaining, which a SELECT prefix
+would otherwise carry past the original check.
+
+### PII redaction at the boundary
+
+Tool results enter the model context and can leave again in a diagnosis
+written back to a ticket. Emails, phone numbers, IP addresses and long
+token-shaped strings are stripped on the way in. Identity fields are redacted
+structurally by key name — detecting names in free text needs NER and misfires
+on product names and error strings, so only labelled fields are caught.
+
+### Output validation
+
+Input redaction is not sufficient on its own. A test where the ticket
+description contained an email address and an IP, and asked for both to be
+repeated, produced a diagnosis containing them four times. The model complied
+with content that arrived through the ticket itself, which the input redactor
+had no reason to strip. The output gate caught it and logged a guardrail span.
+
+### Injection detection
+
+The prompt establishes a trust boundary and the model has flagged every
+injection in the golden set. That is a behaviour, not a guarantee — a
+different model, a different provider, or a more carefully phrased payload
+could pass silently.
+
+A pattern scanner runs on every source payload independently of the model. It
+catches obvious payloads and misses careful ones, so it supplements the prompt
+rather than replacing it. What it adds is determinism: a suspicious payload
+appears in the trace whether or not the model reacted to it, with the source
+and field it came from.
+
+Across 20 cases it fires once, on SUP-20, with no false positives:
+
+
+### What is not covered
+
+The scanner is regex-based and defeatable by rephrasing. Name redaction only
+covers labelled fields. Neither the diagnosis nor the tool output is checked
+for accuracy — that is what the eval harness is for, and the two are separate
+concerns.
+
 ## Architecture
 
 ```
