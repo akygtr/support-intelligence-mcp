@@ -119,3 +119,42 @@ def call_llm(prompt: str, system: str = "", attempts: int = 3) -> str:
             time.sleep(2 ** attempt * 5)
 
     raise RuntimeError(f"LLM call failed after {attempts} attempts: {last_error}")
+
+def call_llm_tools(messages: list, tools: list, system: str = "") -> dict:
+    """Tool-use turn. Returns the raw content blocks plus what the model decided.
+
+    Anthropic only — the tool-use message format differs enough between
+    providers that pretending otherwise would hide bugs.
+    """
+    if PROVIDER != "anthropic":
+        raise RuntimeError("Tool use requires ANTHROPIC_API_KEY")
+
+    client = _get_client()
+
+    kwargs = {
+        "model": MODEL,
+        "max_tokens": MAX_TOKENS,
+        "messages": messages,
+    }
+    if system:
+        kwargs["system"] = system
+    if tools:
+        kwargs["tools"] = tools
+
+    response = client.messages.create(**kwargs)
+
+    text = "".join(b.text for b in response.content if b.type == "text")
+    tool_calls = [
+        {"id": b.id, "name": b.name, "input": b.input}
+        for b in response.content
+        if b.type == "tool_use"
+    ]
+
+    return {
+        "content": response.content,
+        "text": text,
+        "tool_calls": tool_calls,
+        "stop_reason": response.stop_reason,
+        "tokens_in": response.usage.input_tokens,
+        "tokens_out": response.usage.output_tokens,
+    }
