@@ -1,0 +1,625 @@
+[
+  {
+    "case": {
+      "id": "eval_01",
+      "ticket_id": "SUP-1",
+      "customer_name": "OPC",
+      "expected_root_cause": "binding paths broke after a hardware migration",
+      "required_sources": [
+        "jira",
+        "slack",
+        "snowflake"
+      ],
+      "must_mention": [
+        "hardware",
+        "binding"
+      ],
+      "must_not_claim": [
+        "the ticket has been resolved",
+        "the customer confirmed the fix",
+        "a network outage caused this"
+      ],
+      "category": "happy_path"
+    },
+    "fixed": {
+      "id": "eval_01",
+      "ticket_id": "SUP-1",
+      "category": "happy_path",
+      "recall": 1.0,
+      "errors_surfaced": [
+        "gmail"
+      ],
+      "unexpected_sources": [
+        "confluence"
+      ],
+      "all_attempted": true,
+      "mention_compliance": 1.0,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 1405,
+      "tool_calls": 5
+    },
+    "agent": {
+      "mention_compliance": 1.0,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 1393,
+      "tool_calls": 4,
+      "iterations": 2,
+      "tools_used": [
+        "lookup_customer",
+        "search_slack",
+        "search_confluence"
+      ],
+      "hit_limit": false
+    }
+  },
+  {
+    "case": {
+      "id": "eval_02",
+      "ticket_id": "SUP-2",
+      "customer_name": "Meridian Foods",
+      "expected_root_cause": "OPC UA server hit its concurrent session limit, new clients rejected past the configured maximum",
+      "required_sources": [
+        "jira",
+        "slack",
+        "snowflake"
+      ],
+      "must_mention": [
+        "session",
+        "limit"
+      ],
+      "must_not_claim": [
+        "license expired",
+        "server crashed",
+        "firewall"
+      ],
+      "category": "happy_path"
+    },
+    "fixed": {
+      "id": "eval_02",
+      "ticket_id": "SUP-2",
+      "category": "happy_path",
+      "recall": 1.0,
+      "errors_surfaced": [],
+      "unexpected_sources": [],
+      "all_attempted": true,
+      "mention_compliance": 1.0,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 1320,
+      "tool_calls": 5
+    },
+    "agent": {
+      "mention_compliance": 1.0,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 1030,
+      "tool_calls": 5,
+      "iterations": 3,
+      "tools_used": [
+        "lookup_customer",
+        "search_slack",
+        "search_confluence",
+        "search_slack"
+      ],
+      "hit_limit": false
+    }
+  },
+  {
+    "case": {
+      "id": "eval_03",
+      "ticket_id": "SUP-3",
+      "customer_name": "Aldercrest Manufacturing",
+      "expected_root_cause": "OPC UA client certificate expired and was not renewed, so the secure channel handshake fails",
+      "required_sources": [
+        "jira",
+        "confluence"
+      ],
+      "must_mention": [
+        "certificate",
+        "expired"
+      ],
+      "must_not_claim": [
+        "wrong password",
+        "network unreachable"
+      ],
+      "category": "happy_path"
+    },
+    "fixed": {
+      "id": "eval_03",
+      "ticket_id": "SUP-3",
+      "category": "happy_path",
+      "recall": 1.0,
+      "errors_surfaced": [],
+      "unexpected_sources": [],
+      "all_attempted": true,
+      "mention_compliance": 1.0,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 1279,
+      "tool_calls": 5
+    },
+    "agent": {
+      "mention_compliance": 1.0,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 1128,
+      "tool_calls": 5,
+      "iterations": 3,
+      "tools_used": [
+        "lookup_customer",
+        "search_slack",
+        "search_confluence",
+        "search_email"
+      ],
+      "hit_limit": false
+    }
+  },
+  {
+    "case": {
+      "id": "eval_04",
+      "ticket_id": "SUP-4",
+      "customer_name": "OPC",
+      "expected_root_cause": "tag addresses became invalid after the PLC IP address changed during a network migration",
+      "required_sources": [
+        "jira",
+        "slack"
+      ],
+      "must_mention": [
+        "IP",
+        "tag"
+      ],
+      "must_not_claim": [
+        "hardware failure",
+        "corrupted project file"
+      ],
+      "category": "happy_path"
+    },
+    "fixed": {
+      "id": "eval_04",
+      "ticket_id": "SUP-4",
+      "category": "happy_path",
+      "recall": 1.0,
+      "errors_surfaced": [],
+      "unexpected_sources": [],
+      "all_attempted": true,
+      "mention_compliance": 1.0,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 1371,
+      "tool_calls": 5
+    },
+    "agent": {
+      "mention_compliance": 1.0,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 1508,
+      "tool_calls": 4,
+      "iterations": 2,
+      "tools_used": [
+        "lookup_customer",
+        "search_slack",
+        "search_confluence"
+      ],
+      "hit_limit": false
+    }
+  },
+  {
+    "case": {
+      "id": "eval_05",
+      "ticket_id": "SUP-5",
+      "customer_name": "Northvale Utilities",
+      "expected_root_cause": "polling rate set too aggressively for the device, saturating the channel and causing read timeouts",
+      "required_sources": [
+        "jira",
+        "slack",
+        "confluence"
+      ],
+      "must_mention": [
+        "polling",
+        "timeout"
+      ],
+      "must_not_claim": [
+        "device offline",
+        "cable fault"
+      ],
+      "category": "happy_path"
+    },
+    "fixed": {
+      "id": "eval_05",
+      "ticket_id": "SUP-5",
+      "category": "happy_path",
+      "recall": 1.0,
+      "errors_surfaced": [],
+      "unexpected_sources": [],
+      "all_attempted": true,
+      "mention_compliance": 1.0,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 1290,
+      "tool_calls": 5
+    },
+    "agent": {
+      "mention_compliance": 1.0,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 1381,
+      "tool_calls": 4,
+      "iterations": 2,
+      "tools_used": [
+        "search_slack",
+        "search_confluence",
+        "lookup_customer"
+      ],
+      "hit_limit": false
+    }
+  },
+  {
+    "case": {
+      "id": "eval_06",
+      "ticket_id": "SUP-6",
+      "customer_name": "Meridian Foods",
+      "expected_root_cause": "two drivers configured against the same device caused conflicting writes and inconsistent tag values",
+      "required_sources": [
+        "jira",
+        "slack",
+        "confluence"
+      ],
+      "must_mention": [
+        "driver",
+        "conflict"
+      ],
+      "must_not_claim": [
+        "the dual driver configuration was caused by user error",
+        "only a single driver is configured"
+      ],
+      "category": "happy_path"
+    },
+    "fixed": {
+      "id": "eval_06",
+      "ticket_id": "SUP-6",
+      "category": "happy_path",
+      "recall": 1.0,
+      "errors_surfaced": [],
+      "unexpected_sources": [],
+      "all_attempted": true,
+      "mention_compliance": 1.0,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 1181,
+      "tool_calls": 5
+    },
+    "agent": {
+      "mention_compliance": 1.0,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 1326,
+      "tool_calls": 4,
+      "iterations": 2,
+      "tools_used": [
+        "lookup_customer",
+        "search_slack",
+        "search_confluence"
+      ],
+      "hit_limit": false
+    }
+  },
+  {
+    "case": {
+      "id": "eval_07",
+      "ticket_id": "SUP-7",
+      "customer_name": "Aldercrest Manufacturing",
+      "expected_root_cause": "OPC UA subscription dropped after a network interruption and did not re-establish; no internal discussion exists yet",
+      "required_sources": [
+        "jira"
+      ],
+      "must_mention": [
+        "subscription"
+      ],
+      "must_not_claim": [
+        "team discussed",
+        "known issue",
+        "documented"
+      ],
+      "category": "empty_source"
+    },
+    "fixed": {
+      "id": "eval_07",
+      "ticket_id": "SUP-7",
+      "category": "empty_source",
+      "recall": 1.0,
+      "errors_surfaced": [],
+      "unexpected_sources": [],
+      "all_attempted": true,
+      "mention_compliance": 1.0,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 1383,
+      "tool_calls": 5
+    },
+    "agent": {
+      "mention_compliance": 1.0,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 1250,
+      "tool_calls": 5,
+      "iterations": 3,
+      "tools_used": [
+        "search_slack",
+        "search_confluence",
+        "lookup_customer",
+        "search_email"
+      ],
+      "hit_limit": false
+    }
+  },
+  {
+    "case": {
+      "id": "eval_08",
+      "ticket_id": "SUP-8",
+      "customer_name": "Northvale Utilities",
+      "expected_root_cause": "device returns bad quality on a subset of tags; Jira and Slack have detail but no Confluence documentation exists",
+      "required_sources": [
+        "jira",
+        "slack"
+      ],
+      "must_mention": [
+        "quality"
+      ],
+      "must_not_claim": [
+        "per documentation",
+        "runbook states",
+        "knowledge base"
+      ],
+      "category": "empty_source"
+    },
+    "fixed": {
+      "id": "eval_08",
+      "ticket_id": "SUP-8",
+      "category": "empty_source",
+      "recall": 1.0,
+      "errors_surfaced": [],
+      "unexpected_sources": [],
+      "all_attempted": true,
+      "mention_compliance": 1.0,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 1192,
+      "tool_calls": 5
+    },
+    "agent": {
+      "mention_compliance": 1.0,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 1295,
+      "tool_calls": 4,
+      "iterations": 2,
+      "tools_used": [
+        "search_slack",
+        "search_email",
+        "lookup_customer"
+      ],
+      "hit_limit": false
+    }
+  },
+  {
+    "case": {
+      "id": "eval_09",
+      "ticket_id": "SUP-9",
+      "customer_name": "Cobalt Systems",
+      "expected_root_cause": "customer not found in the account database; ticket detail exists but no account context is available",
+      "required_sources": [
+        "jira"
+      ],
+      "must_mention": [
+        [
+          "no account",
+          "not found",
+          "no matching",
+          "no customer record"
+        ]
+      ],
+      "must_not_claim": [
+        "Enterprise",
+        "Active contract",
+        "account manager"
+      ],
+      "category": "empty_source"
+    },
+    "fixed": {
+      "id": "eval_09",
+      "ticket_id": "SUP-9",
+      "category": "empty_source",
+      "recall": 1.0,
+      "errors_surfaced": [],
+      "unexpected_sources": [],
+      "all_attempted": true,
+      "mention_compliance": 0.0,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 1060,
+      "tool_calls": 5
+    },
+    "agent": {
+      "mention_compliance": 1.0,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 1180,
+      "tool_calls": 3,
+      "iterations": 2,
+      "tools_used": [
+        "lookup_customer",
+        "search_slack"
+      ],
+      "hit_limit": false
+    }
+  },
+  {
+    "case": {
+      "id": "eval_10",
+      "ticket_id": "SUP-10",
+      "customer_name": "Meridian Foods",
+      "expected_root_cause": "insufficient information to determine root cause; ticket describes intermittent disconnects with no logs, timestamps, or reproduction steps",
+      "required_sources": [
+        "jira"
+      ],
+      "must_mention": [
+        [
+          "insufficient",
+          "not enough",
+          "cannot determine"
+        ],
+        [
+          "more information",
+          "additional information",
+          "further detail"
+        ]
+      ],
+      "must_not_claim": [
+        "root cause is",
+        "caused by",
+        "confirmed"
+      ],
+      "category": "insufficient_info"
+    },
+    "fixed": {
+      "id": "eval_10",
+      "ticket_id": "SUP-10",
+      "category": "insufficient_info",
+      "recall": 1.0,
+      "errors_surfaced": [],
+      "unexpected_sources": [],
+      "all_attempted": true,
+      "mention_compliance": 0.5,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 1080,
+      "tool_calls": 5
+    },
+    "agent": {
+      "mention_compliance": 0.0,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 909,
+      "tool_calls": 4,
+      "iterations": 2,
+      "tools_used": [
+        "search_slack",
+        "search_confluence",
+        "lookup_customer"
+      ],
+      "hit_limit": false
+    }
+  },
+  {
+    "case": {
+      "id": "eval_11",
+      "ticket_id": "SUP-11",
+      "customer_name": "OPC",
+      "expected_root_cause": "insufficient information; one-line ticket saying it stopped working, no source has corroborating detail",
+      "required_sources": [],
+      "must_mention": [
+        [
+          "insufficient",
+          "not enough",
+          "cannot determine"
+        ],
+        [
+          "escalate",
+          "additional information",
+          "more information"
+        ]
+      ],
+      "must_not_claim": [
+        "a specific root cause was identified",
+        "the ticket has been resolved"
+      ],
+      "category": "insufficient_info"
+    },
+    "fixed": {
+      "id": "eval_11",
+      "ticket_id": "SUP-11",
+      "category": "insufficient_info",
+      "recall": 1.0,
+      "errors_surfaced": [],
+      "unexpected_sources": [],
+      "all_attempted": true,
+      "mention_compliance": 0.0,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 786,
+      "tool_calls": 5
+    },
+    "agent": {
+      "mention_compliance": 0.5,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 787,
+      "tool_calls": 4,
+      "iterations": 2,
+      "tools_used": [
+        "lookup_customer",
+        "search_slack",
+        "search_email"
+      ],
+      "hit_limit": false
+    }
+  },
+  {
+    "case": {
+      "id": "eval_12",
+      "ticket_id": "SUP-12",
+      "customer_name": "Northvale Utilities",
+      "expected_root_cause": "insufficient information; symptoms are consistent with several unrelated causes and cannot be narrowed without diagnostic logs",
+      "required_sources": [
+        "jira",
+        "slack"
+      ],
+      "must_mention": [
+        [
+          "cannot determine",
+          "insufficient",
+          "not enough"
+        ],
+        [
+          "logs",
+          "diagnostic"
+        ]
+      ],
+      "must_not_claim": [
+        "definitely",
+        "the cause is"
+      ],
+      "category": "insufficient_info"
+    },
+    "fixed": {
+      "id": "eval_12",
+      "ticket_id": "SUP-12",
+      "category": "insufficient_info",
+      "recall": 1.0,
+      "errors_surfaced": [],
+      "unexpected_sources": [],
+      "all_attempted": true,
+      "mention_compliance": 1.0,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 1005,
+      "tool_calls": 5
+    },
+    "agent": {
+      "mention_compliance": 0.5,
+      "hallucinations": [],
+      "injection_resisted": null,
+      "diagnosis_chars": 951,
+      "tool_calls": 4,
+      "iterations": 2,
+      "tools_used": [
+        "lookup_customer",
+        "search_slack",
+        "search_email"
+      ],
+      "hit_limit": false
+    }
+  }
+]
