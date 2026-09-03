@@ -16,7 +16,7 @@ observability layer is blind to the thing saving the most money.
 import hashlib
 import json
 from pathlib import Path
-
+from src.validate import validate_diagnosis
 from src.llm import call_llm
 from src.trace import span
 
@@ -73,5 +73,14 @@ def write_diagnosis(sources: dict, use_cache: bool = True) -> str:
         return cached.read_text(encoding="utf-8")
 
     result = call_llm(TEMPLATE.format(payload=payload), system=SYSTEM)
+
+    check = validate_diagnosis(result)
+    if not check.ok:
+        with span("validation_failed", kind="guardrail") as sp:
+            sp.record(leaks=len(check.leaks), issues=len(check.issues),
+                      detail="; ".join(check.leaks + check.issues)[:200])
+
+    # A failing diagnosis is still cached. It is the model's actual output for
+    # this input, and re-generating would hide the failure rather than fix it.
     cached.write_text(result, encoding="utf-8")
     return result

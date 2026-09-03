@@ -101,6 +101,13 @@ def main() -> None:
                 print("\nNo model calls in this trace. Either --no-llm was used, "
               "or every diagnosis was served from cache.")
 
+    # --- Guardrails --------------------------------------------------------
+    guards = [s for s in spans if s["kind"] == "guardrail"]
+    if guards:
+        print(f"\nGuardrail triggers: {len(guards)}")
+        for g in guards:
+            case = g.get("case_id") or "(no case)"
+            print(f"  {g['span_name']} [{case}]: {g.get('detail', '')[:80]}")
     # --- Time split --------------------------------------------------------
     tool_ms = sum(s["duration_ms"] for s in spans if s["kind"] == "tool")
     llm_ms = sum(s["duration_ms"] for s in llm)
