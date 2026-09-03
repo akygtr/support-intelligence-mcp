@@ -107,7 +107,9 @@ def main() -> None:
         print(f"\nGuardrail triggers: {len(guards)}")
         for g in guards:
             case = g.get("case_id") or "(no case)"
-            print(f"  {g['span_name']} [{case}]: {g.get('detail', '')[:80]}")
+            detail = g.get("detail") or g.get("labels", "")
+            src = f" in {g['source']}" if g.get("source") else ""
+            print(f"  {g['span_name']} [{case}]{src}: {detail[:80]}")
     # --- Time split --------------------------------------------------------
     tool_ms = sum(s["duration_ms"] for s in spans if s["kind"] == "tool")
     llm_ms = sum(s["duration_ms"] for s in llm)

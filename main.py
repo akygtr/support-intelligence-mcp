@@ -22,6 +22,7 @@ from src.tools.gmail import search_gmail, GmailSearchInput
 from src.tools.snowflake import query_customer_data, CustomerQueryInput
 from src.trace import span, start_run
 from src.redact import redact
+from src.injection import scan as scan_injection
 
 # Single FastMCP server — all tools live here for Claude Desktop
 mcp = FastMCP("support_intelligence_mcp")
@@ -174,6 +175,28 @@ def _source_health(payload) -> dict:
         return {"source_ok": False, "source_error": str(payload["error"])[:200]}
 
     return {"source_ok": True}
+
+
+def _scan_source(name: str, payload) -> None:
+    """Record any injection patterns found in a source payload.
+
+    Detection only — the payload still goes to the model, which carries the
+    trust boundary in its prompt. This exists so a payload is visible in the
+    trace whether or not the model reacts to it. Pattern matching catches the
+    obvious cases and misses careful ones, so it supplements the prompt rather
+    than replacing it.
+    """
+    findings = scan_injection(payload)
+    if findings:
+        with span("injection_detected", kind="guardrail") as sp:
+            sp.record(
+                source=name,
+                count=len(findings),
+                labels=",".join(sorted({l for f in findings for l in f["labels"]})),
+                where=findings[0]["where"],
+            )
+
+
 class DiagnoseInput(BaseModel):
     """Input model for the full diagnostic workflow tool."""
     model_config = ConfigDict(
@@ -240,6 +263,7 @@ async def diagnose_ticket(params: DiagnoseInput) -> str:
     with span("jira", kind="tool") as sp:
         ticket = redact(await get_ticket_details(params.ticket_id))
         sp.record(bytes=len(json.dumps(ticket)), **_source_health(ticket))
+    _scan_source("jira", ticket)
 
     if "error" in ticket:
         return json.dumps({"error": f"Jira fetch failed: {ticket['error']}"})
@@ -252,12 +276,14 @@ async def diagnose_ticket(params: DiagnoseInput) -> str:
         slack = redact(await get_slack_messages(keyword, params.ticket_id))
         sp.record(bytes=len(json.dumps(slack)), hits=slack.get("total", 0),
                   **_source_health(slack))
+    _scan_source("slack", slack)
 
     # Step 4: Confluence
     with span("confluence", kind="tool") as sp:
         confluence = redact(await search_confluence(keyword, params.ticket_id))
         sp.record(bytes=len(json.dumps(confluence)), hits=confluence.get("total", 0),
                   **_source_health(confluence))
+    _scan_source("confluence", confluence)
 
     # Step 5: Gmail
     gmail_params = GmailSearchInput(query=keyword, max_results=5)
@@ -265,6 +291,7 @@ async def diagnose_ticket(params: DiagnoseInput) -> str:
         gmail_raw = await search_gmail(gmail_params, params.ticket_id)
         sp.record(bytes=len(gmail_raw), **_source_health(gmail_raw))
     gmail = redact(json.loads(gmail_raw))
+    _scan_source("gmail", gmail)
 
     # Step 6: Snowflake — use provided customer_name or fall back to ticket reporter
     lookup_name = params.customer_name or ticket.get("reporter", keyword)
@@ -273,6 +300,7 @@ async def diagnose_ticket(params: DiagnoseInput) -> str:
         snowflake_raw = await query_customer_data(sf_params, params.ticket_id)
         sp.record(bytes=len(snowflake_raw), **_source_health(snowflake_raw))
     snowflake = redact(json.loads(snowflake_raw))
+    _scan_source("snowflake", snowflake)
 
     return json.dumps({
         "ticket": ticket,
@@ -281,7 +309,6 @@ async def diagnose_ticket(params: DiagnoseInput) -> str:
         "gmail": gmail,
         "snowflake": snowflake
     }, indent=2)
-
 
 
 if __name__ == "__main__":
