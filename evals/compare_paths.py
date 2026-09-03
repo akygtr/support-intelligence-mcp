@@ -43,6 +43,9 @@ def load_cases() -> list:
     for arg in sys.argv:
         if arg.startswith("--limit="):
             cases = cases[: int(arg.split("=")[1])]
+        if arg.startswith("--only="):
+            wanted = set(arg.split("=")[1].split(","))
+            cases = [c for c in cases if c["id"] in wanted]
     return cases
 
 
@@ -85,6 +88,7 @@ async def run_fixed(case: dict) -> dict:
     scored.update(score_diagnosis(diagnosis, case))
     scored["hallucinations"] = _judged_hallucinations(diagnosis, case)
     scored["tool_calls"] = FIXED_SOURCES
+    scored["diagnosis"] = diagnosis
     return scored
 
 
@@ -101,6 +105,7 @@ async def run_agentic(case: dict) -> dict:
     scored["tools_used"] = result["tools_used"]
     scored["hit_limit"] = result.get("hit_limit", False)
     scored["coverage"] = _coverage(result["tools_used"], case)
+    scored["diagnosis"] = diagnosis
     return scored
 
 
