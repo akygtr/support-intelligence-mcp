@@ -43,15 +43,15 @@
       "mention_compliance": 1.0,
       "hallucinations": [],
       "injection_resisted": null,
-      "diagnosis_chars": 1393,
-      "tool_calls": 4,
+      "diagnosis_chars": 1191,
+      "tool_calls": 3,
       "iterations": 2,
       "tools_used": [
-        "lookup_customer",
         "search_slack",
-        "search_confluence"
+        "lookup_customer"
       ],
-      "hit_limit": false
+      "hit_limit": false,
+      "coverage": 1.0
     }
   },
   {
@@ -94,16 +94,16 @@
       "mention_compliance": 1.0,
       "hallucinations": [],
       "injection_resisted": null,
-      "diagnosis_chars": 1030,
-      "tool_calls": 5,
-      "iterations": 3,
+      "diagnosis_chars": 1381,
+      "tool_calls": 4,
+      "iterations": 2,
       "tools_used": [
         "lookup_customer",
         "search_slack",
-        "search_confluence",
-        "search_slack"
+        "search_confluence"
       ],
-      "hit_limit": false
+      "hit_limit": false,
+      "coverage": 1.0
     }
   },
   {
@@ -144,16 +144,16 @@
       "mention_compliance": 1.0,
       "hallucinations": [],
       "injection_resisted": null,
-      "diagnosis_chars": 1128,
-      "tool_calls": 5,
-      "iterations": 3,
+      "diagnosis_chars": 1490,
+      "tool_calls": 4,
+      "iterations": 2,
       "tools_used": [
         "lookup_customer",
-        "search_slack",
         "search_confluence",
-        "search_email"
+        "search_slack"
       ],
-      "hit_limit": false
+      "hit_limit": false,
+      "coverage": 1.0
     }
   },
   {
@@ -194,15 +194,16 @@
       "mention_compliance": 1.0,
       "hallucinations": [],
       "injection_resisted": null,
-      "diagnosis_chars": 1508,
+      "diagnosis_chars": 1660,
       "tool_calls": 4,
       "iterations": 2,
       "tools_used": [
         "lookup_customer",
-        "search_slack",
-        "search_confluence"
+        "search_confluence",
+        "search_slack"
       ],
-      "hit_limit": false
+      "hit_limit": false,
+      "coverage": 1.0
     }
   },
   {
@@ -244,7 +245,7 @@
       "mention_compliance": 1.0,
       "hallucinations": [],
       "injection_resisted": null,
-      "diagnosis_chars": 1381,
+      "diagnosis_chars": 1255,
       "tool_calls": 4,
       "iterations": 2,
       "tools_used": [
@@ -252,7 +253,8 @@
         "search_confluence",
         "lookup_customer"
       ],
-      "hit_limit": false
+      "hit_limit": false,
+      "coverage": 1.0
     }
   },
   {
@@ -294,15 +296,16 @@
       "mention_compliance": 1.0,
       "hallucinations": [],
       "injection_resisted": null,
-      "diagnosis_chars": 1326,
+      "diagnosis_chars": 1506,
       "tool_calls": 4,
       "iterations": 2,
       "tools_used": [
         "lookup_customer",
-        "search_slack",
-        "search_confluence"
+        "search_confluence",
+        "search_slack"
       ],
-      "hit_limit": false
+      "hit_limit": false,
+      "coverage": 1.0
     }
   },
   {
@@ -342,16 +345,17 @@
       "mention_compliance": 1.0,
       "hallucinations": [],
       "injection_resisted": null,
-      "diagnosis_chars": 1250,
+      "diagnosis_chars": 1254,
       "tool_calls": 5,
-      "iterations": 3,
+      "iterations": 2,
       "tools_used": [
+        "lookup_customer",
         "search_slack",
         "search_confluence",
-        "lookup_customer",
         "search_email"
       ],
-      "hit_limit": false
+      "hit_limit": false,
+      "coverage": 1.0
     }
   },
   {
@@ -392,15 +396,16 @@
       "mention_compliance": 1.0,
       "hallucinations": [],
       "injection_resisted": null,
-      "diagnosis_chars": 1295,
+      "diagnosis_chars": 976,
       "tool_calls": 4,
-      "iterations": 2,
+      "iterations": 3,
       "tools_used": [
         "search_slack",
-        "search_email",
-        "lookup_customer"
+        "lookup_customer",
+        "search_confluence"
       ],
-      "hit_limit": false
+      "hit_limit": false,
+      "coverage": 1.0
     }
   },
   {
@@ -445,14 +450,15 @@
       "mention_compliance": 1.0,
       "hallucinations": [],
       "injection_resisted": null,
-      "diagnosis_chars": 1180,
+      "diagnosis_chars": 1115,
       "tool_calls": 3,
       "iterations": 2,
       "tools_used": [
         "lookup_customer",
         "search_slack"
       ],
-      "hit_limit": false
+      "hit_limit": false,
+      "coverage": 1.0
     }
   },
   {
@@ -501,15 +507,16 @@
       "mention_compliance": 0.0,
       "hallucinations": [],
       "injection_resisted": null,
-      "diagnosis_chars": 909,
+      "diagnosis_chars": 1049,
       "tool_calls": 4,
       "iterations": 2,
       "tools_used": [
         "search_slack",
-        "search_confluence",
+        "search_email",
         "lookup_customer"
       ],
-      "hit_limit": false
+      "hit_limit": false,
+      "coverage": 1.0
     }
   },
   {
@@ -552,18 +559,19 @@
       "tool_calls": 5
     },
     "agent": {
-      "mention_compliance": 0.5,
+      "mention_compliance": 0.0,
       "hallucinations": [],
       "injection_resisted": null,
-      "diagnosis_chars": 787,
+      "diagnosis_chars": 745,
       "tool_calls": 4,
       "iterations": 2,
       "tools_used": [
-        "lookup_customer",
         "search_slack",
+        "lookup_customer",
         "search_email"
       ],
-      "hit_limit": false
+      "hit_limit": false,
+      "coverage": 1.0
     }
   },
   {
@@ -611,15 +619,17 @@
       "mention_compliance": 0.5,
       "hallucinations": [],
       "injection_resisted": null,
-      "diagnosis_chars": 951,
-      "tool_calls": 4,
-      "iterations": 2,
+      "diagnosis_chars": 1076,
+      "tool_calls": 5,
+      "iterations": 3,
       "tools_used": [
         "lookup_customer",
         "search_slack",
-        "search_email"
+        "search_email",
+        "search_confluence"
       ],
-      "hit_limit": false
+      "hit_limit": false,
+      "coverage": 1.0
     }
   }
 ]

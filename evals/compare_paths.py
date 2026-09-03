@@ -51,6 +51,28 @@ def _judged_hallucinations(diagnosis: str, case: dict) -> list:
     return judge_claims(diagnosis, flagged) if flagged else []
 
 
+def _coverage(tools_used: list, case: dict) -> float:
+    """Fraction of required sources the agent actually queried.
+
+    The fixed path queries everything, so it cannot miss a source. The agent
+    can, and none of the other metrics would notice: a diagnosis that reads
+    well because the skipped source happened to be empty scores the same as
+    one that skipped a source holding the answer.
+    """
+    required = set(case.get("required_sources", []))
+    if not required:
+        return 1.0
+
+    tool_to_source = {
+        "search_slack": "slack",
+        "search_confluence": "confluence",
+        "search_email": "gmail",
+        "lookup_customer": "snowflake",
+    }
+    queried = {tool_to_source[t] for t in tools_used if t in tool_to_source}
+    queried.add("jira")  # always fetched first
+
+    return len(required & queried) / len(required)
 async def run_fixed(case: dict) -> dict:
     params = DiagnoseInput(
         ticket_id=case["ticket_id"],
@@ -78,6 +100,7 @@ async def run_agentic(case: dict) -> dict:
     scored["iterations"] = result["iterations"]
     scored["tools_used"] = result["tools_used"]
     scored["hit_limit"] = result.get("hit_limit", False)
+    scored["coverage"] = _coverage(result["tools_used"], case)
     return scored
 
 
@@ -95,20 +118,23 @@ async def main() -> None:
             continue
         rows.append({"case": case, "fixed": fixed, "agent": agent})
 
-    print(f"\n{'ID':<9} {'CATEGORY':<18} {'CALLS f/a':>10} "
+        print(f"\n{'ID':<9} {'CATEGORY':<18} {'CALLS f/a':>10} {'COVER':>6} "
           f"{'MENTION f/a':>13} {'HALLUC f/a':>12}  AGENT CHOSE")
-    print("-" * 100)
+    print("-" * 108)
     for r in rows:
         f, a = r["fixed"], r["agent"]
         chose = ",".join(t.replace("search_", "").replace("lookup_", "")
                          for t in a["tools_used"]) or "none"
         if a.get("hit_limit"):
             chose += " [LIMIT]"
+        gap = "  MISS" if a["coverage"] < 1.0 else ""
         print(
             f"{r['case']['id']:<9} {r['case'].get('category', ''):<18} "
             f"{f['tool_calls']:>4} /{a['tool_calls']:>4} "
+            f"{a['coverage']:>6.2f} "
             f"{f['mention_compliance']:>6.2f} /{a['mention_compliance']:>5.2f} "
-            f"{len(f['hallucinations']):>5} /{len(a['hallucinations']):>5}  {chose}"
+            f"{len(f['hallucinations']):>5} /{len(a['hallucinations']):>5}  "
+            f"{chose}{gap}"
         )
 
     n = len(rows)
@@ -132,7 +158,11 @@ async def main() -> None:
     print(f"{'Hallucinations':<22}{fixed_halluc:>10}{agent_halluc:>10}"
           f"{agent_halluc - fixed_halluc:>+10}")
     print(f"{'Mean iterations':<22}{'1':>10}{agent_iters:>10.1f}")
-
+    agent_cover = sum(r["agent"]["coverage"] for r in rows) / n
+    misses = sum(1 for r in rows if r["agent"]["coverage"] < 1.0)
+    print(f"{'Source coverage':<22}{'1.00':>10}{agent_cover:>10.2f}"
+          f"{agent_cover - 1.0:>+10.2f}")
+    print(f"{'Cases missing a source':<22}{'0':>10}{misses:>10}")
     out = ROOT / "evals" / "path_comparison.json"
     out.write_text(json.dumps(rows, indent=2, default=str), encoding="utf-8")
     print(f"\nWritten to {out.relative_to(ROOT)}")
