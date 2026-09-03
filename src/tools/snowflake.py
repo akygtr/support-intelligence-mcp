@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 from src.fixtures import is_mock, load
 import snowflake.connector
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 load_dotenv()
 
@@ -65,7 +66,13 @@ class CustomerQueryInput(BaseModel):
 
 
 class RawQueryInput(BaseModel):
-    """Input model for raw SQL query tool."""
+    """Input model for raw SQL query tool.
+
+    The read-only constraint lives here rather than in the tool body. A check
+    inside the function can be deleted by a careless edit and nothing fails
+    until something destructive runs; a validator rejects the input before the
+    function is ever entered.
+    """
     model_config = ConfigDict(
         str_strip_whitespace=True,
         validate_assignment=True,
@@ -78,6 +85,31 @@ class RawQueryInput(BaseModel):
         min_length=10,
         max_length=2000
     )
+
+    @field_validator("sql")
+    @classmethod
+    def must_be_read_only(cls, v: str) -> str:
+        stripped = v.strip()
+
+        if not stripped.upper().startswith("SELECT"):
+            raise ValueError("Only SELECT queries are permitted")
+
+        # Statement chaining would let a SELECT prefix carry a second,
+        # destructive statement past the check above.
+        without_trailing = stripped.rstrip().rstrip(";")
+        if ";" in without_trailing:
+            raise ValueError("Multiple statements are not permitted")
+
+        forbidden = (
+            "DROP", "DELETE", "INSERT", "UPDATE", "ALTER", "CREATE",
+            "TRUNCATE", "GRANT", "REVOKE", "MERGE", "CALL", "EXECUTE",
+        )
+        upper = f" {without_trailing.upper()} "
+        for word in forbidden:
+            if f" {word} " in upper:
+                raise ValueError(f"Statement contains forbidden keyword: {word}")
+
+        return v
 
 
 @mcp.tool(
@@ -163,8 +195,6 @@ async def run_snowflake_query(params: RawQueryInput) -> str:
         str: JSON with query results as list of row dicts,
              plus row count. Returns error if query is not SELECT.
     """
-    if not params.sql.strip().upper().startswith("SELECT"):
-        return json.dumps({"error": "Only SELECT queries are permitted."})
 
     try:
         rows = _run_query(params.sql)
