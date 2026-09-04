@@ -272,6 +272,46 @@ The system reads Slack messages, Confluence pages, and customer email, then
 puts them in front of a model. That is untrusted input reaching something that
 can act, so the defences are layered rather than trusting any single one.
 
+## Semantic document retrieval
+
+The Confluence tool matches keywords. That is why a meeting-notes page
+containing the word "binding" ranks for a binding question — it shares
+vocabulary with the query and nothing else. eval_16 exists to catch exactly
+that failure.
+
+`search_docs` ranks by meaning instead. Five product manuals are chunked at
+~1000 characters on paragraph boundaries, embedded locally with
+all-MiniLM-L6-v2, and stored in Chroma: 1,181 chunks, no API calls, no
+network at query time.
+
+### Match quality varies with how the question is phrased
+
+| Query | Strong matches |
+|---|---|
+| "OPC UA client cannot verify the server certificate" | 3 of 3 |
+| "tags show bad quality after changing the PLC hardware" | 1 of 3 |
+| "too many tags on one channel causing slow reads" | 0 of 3 |
+
+Semantic search works when the query resembles how the manual is written. The
+third query is colloquial; the manual calls it scan rate and load balancing,
+so the retrieved chunks share the topic without answering the question.
+
+Results are labelled strong or weak against a distance threshold rather than
+filtered. A weak hit presented identically to a strong one invites citing a
+marginal match as documentation; dropping weak hits entirely would make "found
+nothing relevant" indistinguishable from "no documentation exists."
+
+### Both retrieval tools remain
+
+Confluence covers recent internal notes, `search_docs` covers product
+documentation. They are different corpora, and keeping both means the agent
+makes a real choice between them — and the two retrieval approaches can be
+compared directly rather than one replacing the other on assertion.
+
+The corpus PDFs are gitignored. They are PTC copyright and freely downloadable
+but not redistributable; `corpus/SOURCES.md` lists what to fetch, and the
+index rebuilds with `python -m src.index_corpus`.
+
 ### Read-only enforcement
 
 The raw SQL tool accepts SELECT only. That constraint lives in a Pydantic
