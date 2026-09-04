@@ -45,6 +45,29 @@ TOOLS = [
             "required": ["keyword"],
         },
     },
+        {
+        "name": "search_docs",
+        "description": (
+            "Semantic search over product documentation — server manuals, "
+            "driver guides, and diagnostic procedures. Ranks by meaning rather "
+            "than keyword, so it finds the relevant section even when the "
+            "ticket's wording differs from the manual's. Each hit is labelled "
+            "strong or weak; treat weak matches as topically adjacent rather "
+            "than authoritative. Use this for how-something-works or "
+            "how-to-fix questions, not for what-happened-on-this-ticket."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Describe the technical problem in a full "
+                                   "phrase, not keywords.",
+                }
+            },
+            "required": ["query"],
+        },
+    },
     {
         "name": "search_confluence",
         "description": (
@@ -102,6 +125,9 @@ async def _execute_tool(name: str, args: dict, ticket_id: str) -> dict:
     would throw away the four sources that did work.
     """
     try:
+        if name == "search_docs":
+            from src.tools.docs import search_docs
+            return await search_docs(args["query"], ticket_id)
         if name == "search_slack":
             return await get_slack_messages(args["keyword"], ticket_id)
 
