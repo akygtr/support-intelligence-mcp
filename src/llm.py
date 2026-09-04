@@ -67,12 +67,22 @@ def _call_anthropic(client, prompt: str, system: str, sp) -> str:
         "messages": [{"role": "user", "content": prompt}],
     }
     if system:
-        kwargs["system"] = system
+        # The system prompt is identical on every call and is the largest
+        # constant part of the request. Marking it cacheable trades a 25%
+        # premium on the write for a 90% discount on every subsequent read.
+        kwargs["system"] = [{
+            "type": "text",
+            "text": system,
+            "cache_control": {"type": "ephemeral"},
+        }]
 
     response = client.messages.create(**kwargs)
+    usage = response.usage
     sp.record(
-        tokens_in=response.usage.input_tokens,
-        tokens_out=response.usage.output_tokens,
+        tokens_in=usage.input_tokens,
+        tokens_out=usage.output_tokens,
+        cache_write=getattr(usage, "cache_creation_input_tokens", 0) or 0,
+        cache_read=getattr(usage, "cache_read_input_tokens", 0) or 0,
     )
     return "".join(b.text for b in response.content if b.type == "text")
 

@@ -94,6 +94,9 @@ def main() -> None:
         print(f"{'P95 latency':<20} {percentile(durations, 0.95):.0f} ms")
         print(f"{'Tokens in / out':<20} {tin:,} / {tout:,}")
         print(f"{'Retries':<20} {retries}")
+        cache_write = sum(s.get("cache_write", 0) for s in llm)
+        cache_read = sum(s.get("cache_read", 0) for s in llm)
+        print(f"{'Cache write / read':<20} {cache_write:,} / {cache_read:,}")
         print(f"{'Est. cost this run':<20} ${cost:.4f}")
         if llm:
             print(f"{'Est. cost per case':<20} ${cost/len(llm):.5f}")
