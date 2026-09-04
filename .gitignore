@@ -15,3 +15,5 @@ corpus/*.pdf
 evals/.diagnosis_cache/
 
 traces/*.jsonl
+
+corpus/.chroma/
