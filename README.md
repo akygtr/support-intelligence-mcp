@@ -627,44 +627,59 @@ and a tool that posts a comment is not read-only.
 
 `EXECUTE` defaults to false. Nothing writes unless it is explicitly enabled.
 
-## Sample Output
+## Sample output
 
 ```
 Ticket: SUP-1 — Broken Binding
-Status: Open | Priority: Medium
-Reporter: Akshara Kumari | Created: Aug 19, 2026
+Status: Open | Priority: Medium | Reporter: [NAME]
 
 Customer: OPC Systems (Enterprise, Active)
-Contact: Carlos Rivera | Account Manager: Sarah Lee
+Contact: [NAME] | Account manager: [NAME]
 
-Slack: 1 message — "Broken Binding, after Hardware change"
-Confluence: Meeting notes matched, no KB article found
-Gmail: No customer email thread found
+Slack:      1 message — "Broken Binding, after Hardware change"
+Confluence: meeting notes matched on keyword, judged not relevant
+Docs:       no strong matches
+Gmail:      unavailable (expired OAuth token) — not "no emails found"
+
+Proposed:   add_comment [low, auto]
+            set_priority [medium, needs approval]
 ```
 
----
-
-## Project Context
-
-Built as a portfolio project targeting Field/Sales Development Engineer roles at companies working at the intersection of OT and AI — Cognite, Sight Machine, Moveworks, Glean, C3.ai.
-
-The workflow mirrors real support triage at industrial software companies where a single ticket touches multiple systems before a response goes out.
+Names are redacted before the payload reaches the model. Gmail reports as
+unavailable rather than empty, because "I could not look" and "I looked and
+found nothing" are different findings.
 
 ---
 
-## What's Not Committed
+## What is not committed
 
 ```
 .env
 gmail_credentials.json
 gmail_token.json
+corpus/*.pdf
+traces/*.jsonl
+evals/.diagnosis_cache/
 ```
 
-These contain credentials and are gitignored. See setup instructions above.
+Credentials are gitignored. The corpus PDFs are PTC-copyrighted product
+manuals — freely downloadable, not redistributable — so `corpus/SOURCES.md`
+lists what to fetch and the index rebuilds locally. Traces and cached
+diagnoses are run artifacts.
+
+---
 
 ## Security
 
-All credentials load from a gitignored `.env`. An OAuth client secret was committed early in development; it was rotated in Google Cloud and purged from git history with `git-filter-repo`. Fixture mode exists partly so the project can be demoed and tested with no credentials present.
+All credentials load from a gitignored `.env`. An OAuth client secret was
+committed early in development; it was rotated in Google Cloud and purged
+from git history with `git-filter-repo`. GitHub's push protection later
+blocked a commit containing a test string that matched a Stripe key format —
+it was a fixture for the redaction tests, not a real secret, but the block
+was correct.
+
+Fixture mode exists partly so the project can be demoed and tested with no
+credentials present at all.
 
 ---
 
@@ -678,4 +693,8 @@ All credentials load from a gitignored `.env`. An OAuth client secret was commit
 - [x] Guardrails: read-only enforcement, PII redaction, output validation, injection detection
 - [x] Semantic retrieval over documentation
 - [x] Cost control: diagnosis caching, rate-limit handling, prompt caching measured
-- [ ] Write actions with an approval gate
+- [x] Write actions with tiered approval and scanner-gated blocking
+
+Not built, and worth naming: no human-in-the-loop UI for approving proposals,
+no multi-turn conversation with the requester, no learning from resolved
+tickets. The corpus is five manuals, not a knowledge base.
