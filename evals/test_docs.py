@@ -1,4 +1,4 @@
-import asyncio, json
+import asyncio
 from src.tools.docs import search_docs
 
 queries = [
@@ -11,7 +11,8 @@ for q in queries:
     r = asyncio.run(search_docs(q))
     print("=" * 70)
     print("Q:", q)
+    print(f"   {r.get('strong_matches', 0)} strong of {r.get('total', 0)}")
     for hit in r.get("results", []):
-        print(f"  [{hit['distance']}] {hit['source']} p{hit['page']}")
-        print(f"     {hit['excerpt'][:150].strip()}")
+        print(f"  [{hit['distance']} {hit['match']:>6}] {hit['source']} p{hit['page']}")
+        print(f"     {hit['excerpt'][:120].strip()}")
     print()
