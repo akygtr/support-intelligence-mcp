@@ -12,7 +12,7 @@ in src/execute.py decides on.
 
 import json
 import re
-
+from src.trace import span
 from src.actions import ACTION_TIERS, ProposedAction
 from src.llm import call_llm
 
@@ -66,8 +66,15 @@ def _parse(raw: str) -> list:
         return json.loads(match.group()) if match else []
 
 
-def propose_actions(ticket_id: str, diagnosis: str) -> list:
+def propose_actions(ticket_id: str, diagnosis: str,
+                    injection_found: bool = False) -> list:
     """Return ProposedAction objects for a diagnosis.
+
+    When the injection scanner fired on this ticket, anything above LOW tier
+    is dropped regardless of what the diagnosis says. Across six runs of the
+    injection case the model mentioned a known payload in only half of them,
+    so its judgement cannot be the control. The regex scan fires every time;
+    that is what gates the action.
 
     Unknown action names are dropped rather than raising. A malformed proposal
     is the model's problem, not a reason to lose the ones it got right.
@@ -78,15 +85,32 @@ def propose_actions(ticket_id: str, diagnosis: str) -> list:
     )
 
     proposals = []
+    blocked = []
+
     for item in _parse(raw):
         if not isinstance(item, dict):
             continue
         if item.get("action") not in ACTION_TIERS:
             continue
-        proposals.append(ProposedAction(
+
+        proposal = ProposedAction(
             action=item["action"],
             params=item.get("params", {}),
             rationale=item.get("rationale", ""),
-        ))
+        )
+
+        if injection_found and proposal.needs_approval:
+            blocked.append(proposal)
+            continue
+
+        proposals.append(proposal)
+
+    if blocked:
+        with span("actions_blocked_by_injection", kind="guardrail") as sp:
+            sp.record(
+                ticket_id=ticket_id,
+                count=len(blocked),
+                actions=",".join(p.action for p in blocked),
+            )
 
     return proposals
