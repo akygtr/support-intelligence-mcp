@@ -284,6 +284,29 @@ that failure.
 all-MiniLM-L6-v2, and stored in Chroma: 1,181 chunks, no API calls, no
 network at query time.
 
+## Cost control
+
+Cost per full 20-case run is $0.0025 on claude-haiku-4-5, or $0.00012 per
+case. Three things keep it there.
+
+**Diagnosis caching.** Diagnoses are cached on disk keyed by the system prompt
+and the source payload together, so editing the prompt invalidates every entry
+rather than silently scoring stale output. A fully cached run costs nothing,
+which is visible in the dashboard as a run with near-zero token usage.
+
+**Fail-fast on rate limits.** The first version retried 429s with exponential
+backoff. That was wrong: a rate limit is a quota decision, not a transient
+blip, and retrying it consumed more quota than it recovered — a single run
+burned a day's allowance across 16 failed cases. Only 500 and 503 are retried
+now.
+
+**Prompt caching, which does not apply here.** The system prompt is marked
+cacheable, but at ~400 tokens it falls under the 1024-token minimum and the
+API declines to cache it without erroring. Cache write and read token counts
+are traced, so the zero is measured rather than assumed. It would apply to a
+larger system prompt or a model with a lower floor; on this workload the
+constant portion of the request is simply too small for the mechanism to help.
+
 ### Match quality varies with how the question is phrased
 
 | Query | Strong matches |
@@ -520,6 +543,6 @@ All credentials load from a gitignored `.env`. An OAuth client secret was commit
 - [x] Tracing, warehouse sink, and cost/latency dashboard
 - [x] Agentic loop, model selects sources instead of fixed sequence
 - [x] Guardrails: read-only enforcement, PII redaction, output validation, injection detection
-- [ ] Semantic retrieval over documentation
-- [ ] Prompt caching and cost reduction
+- [x] Semantic retrieval over documentation
+- [x] Cost control: diagnosis caching, rate-limit handling, prompt caching measured
 - [ ] Write actions with an approval gate
