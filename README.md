@@ -457,14 +457,63 @@ Claude Desktop
       ▼
 FastMCP Server (main.py)
       │
-      ├── src/tools/jira.py        → Jira REST API v3
-      ├── src/tools/slack.py       → Slack conversations.history
-      ├── src/tools/confluence.py  → Confluence CQL search
-      ├── src/tools/gmail.py       → Gmail API (OAuth2)
-      └── src/tools/snowflake.py   → Snowflake connector
+      ├── Sources
+      │     ├── src/tools/jira.py         → Jira REST API v3
+      │     ├── src/tools/slack.py        → Slack conversations.history
+      │     ├── src/tools/confluence.py   → Confluence CQL search
+      │     ├── src/tools/gmail.py        → Gmail API (OAuth2)
+      │     ├── src/tools/snowflake.py    → Snowflake connector
+      │     └── src/tools/docs.py         → Chroma, local embeddings
+      │
+      ├── Diagnosis
+      │     ├── src/diagnose.py           → fixed sequence, cached
+      │     ├── src/agent.py              → agentic loop, model selects sources
+      │     └── src/llm.py                → provider-agnostic model calls
+      │
+      ├── Guardrails
+      │     ├── src/redact.py             → PII stripped from tool output
+      │     ├── src/validate.py           → diagnosis checked before return
+      │     └── src/injection.py          → pattern scan on every source
+      │
+      ├── Actions
+      │     ├── src/propose.py            → model proposes, does not execute
+      │     ├── src/actions.py            → tiers and approval rules
+      │     ├── src/execute.py            → the gate
+      │     └── src/tools/jira_write.py   → the only tools that change state
+      │
+      └── Observability
+            ├── src/trace.py              → spans to JSONL
+            └── src/warehouse.py          → spans to SQL, dashboard on top
 ```
 
-Each tool is independently callable or runs as part of the full `diagnose_ticket` orchestration.
+Sources are independently callable as MCP tools, or run as part of either
+diagnosis path. Guardrails sit at the boundaries rather than inside the
+sources: redaction on the way in, validation on the way out, injection
+scanning on both.
+
+---
+
+## Tech stack
+
+**Model and protocol**
+- FastMCP, MCP Python SDK
+- Anthropic SDK — claude-haiku-4-5 for diagnosis, proposals, and the judge
+- Gemini as a configurable fallback; the provider is one file
+
+**Sources**
+- Jira REST API v3, Slack Web API, Confluence REST API
+- Gmail API (OAuth2), Snowflake Connector for Python
+
+**Retrieval**
+- ChromaDB, sentence-transformers (all-MiniLM-L6-v2), pypdf
+- Embeddings run locally: no API calls, no network at query time
+
+**Evaluation and observability**
+- pytest, GitHub Actions
+- SQL Server for the trace warehouse; the loader is warehouse-agnostic
+- Power BI for the dashboard
+
+Python 3.10.
 
 ---
 
@@ -546,19 +595,37 @@ Restart Claude Desktop — the server appears under Settings → Developer.
 
 ---
 
-## Available Tools
+## Available tools
+
+**Read**
 
 | Tool | Description |
-|------|-------------|
-| `diagnose_ticket` | Full 5-source diagnostic workflow |
-| `get_jira_ticket` | Fetch Jira ticket by ID |
-| `get_slack_messages` | Search Slack support channel by keyword |
-| `search_confluence` | Search Confluence pages via CQL |
-| `search_gmail` | Search Gmail by keyword or query |
-| `query_customer_data` | Look up customer account in Snowflake |
-| `run_snowflake_query` | Run custom read-only SQL on Snowflake |
+|---|---|
+| `diagnose_ticket` | Fixed-sequence diagnostic across all five sources |
+| `get_jira_ticket` | Fetch a Jira ticket by ID |
+| `get_slack_messages` | Search the support channel by keyword |
+| `search_confluence` | Keyword search over internal pages via CQL |
+| `search_docs` | Semantic search over product documentation |
+| `search_gmail` | Search customer email threads |
+| `query_customer_data` | Look up a customer account in Snowflake |
+| `run_snowflake_query` | Read-only SQL, enforced by a Pydantic validator |
 
----
+**Write**
+
+| Tool | Tier | Gate |
+|---|---|---|
+| `add_comment` | low | Auto-executes when `EXECUTE=true` |
+| `add_label` | low | Auto-executes when `EXECUTE=true` |
+| `set_priority` | medium | Requires approval |
+| `assign_owner` | medium | Requires approval |
+| `reply_to_customer` | high | Proposable; no executor |
+| `close_ticket` | high | Proposable; no executor |
+
+Write tools carry honest MCP annotations. The read tools declare
+`readOnlyHint`; these do not, because an MCP client acts on that declaration
+and a tool that posts a comment is not read-only.
+
+`EXECUTE` defaults to false. Nothing writes unless it is explicitly enabled.
 
 ## Sample Output
 
