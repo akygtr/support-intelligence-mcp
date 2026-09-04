@@ -1,30 +1,62 @@
 # Support Intelligence MCP Server
+
 ![Evals](https://github.com/akygtr/support-intelligence-mcp/actions/workflows/evals.yml/badge.svg)
 
-A Model Context Protocol (MCP) server that automates B2B technical support triage by pulling from 5 real data sources into a single diagnostic workflow — callable directly from Claude Desktop.
+An MCP server that diagnoses B2B support tickets across five enterprise
+systems, then proposes the actions a human would take next. Read-only by
+default; writes go through a tiered approval gate.
 
 ---
 
-## The Problem
+## The problem
 
-Support engineers waste time context-switching. A single ticket requires opening Jira, Slack, Confluence, Gmail, and a CRM — manually — before they can even start diagnosing. This project collapses that into one command.
+A single support ticket means opening Jira, Slack, Confluence, email, and the
+CRM before diagnosis can even start. Collapsing that into one call is the easy
+part. The hard part is knowing whether the result can be trusted, because an
+agent that is wrong reads exactly like an agent that is right.
+
+Most of this project is the second problem.
 
 ---
 
-## What It Does
+## What it does
 
-One call to `diagnose_ticket` hits all 5 sources in sequence and returns a unified triage summary:
+Two paths, both scored against the same twenty-case golden set.
+
+**Fixed sequence.** `diagnose_ticket` queries all five sources in order and
+returns the combined result. Predictable, complete, and wasteful.
+
+**Agentic loop.** `diagnose_agentic` reads the ticket, chooses which sources
+are worth querying, and stops when it can answer or can say why it cannot.
+13% fewer tool calls at comparable quality, with a coverage metric to catch
+the case where a saving comes from skipping a source that mattered.
+
+Either path can then propose actions — comment, label, priority, assignment —
+which a gate decides on. Nothing customer-facing executes automatically, and
+`close_ticket` has no implementation at all.
 
 ```
 diagnose ticket SUP-1 for customer OPC
 ```
 
-**Output:**
-- Ticket details from Jira
-- Internal Slack messages related to the issue
-- Confluence documentation matches
-- Customer email threads from Gmail
-- Account info and contract status from Snowflake
+Returns Jira details, related Slack discussion, Confluence and product
+documentation matches, customer email threads, and account status — with
+unavailable sources reported as unavailable rather than empty.
+
+---
+
+## What is interesting here
+
+The parts worth reading are the measurements that changed the design:
+
+- [Evaluation](#evaluation) — a substring matcher flagged three correct
+  diagnoses as hallucinations, so claim checking moved to an LLM judge
+- [Observability](#observability) — retrieval across five systems is 0.1% of
+  wall time; the model call is the entire latency budget
+- [Fixed sequence vs agentic loop](#fixed-sequence-vs-agentic-loop) — the
+  first agentic version used *more* tool calls than no agent at all
+- [Write actions](#write-actions) — the model noticed a known prompt injection
+  in 3 of 6 runs, so a deterministic scan gates the actions instead
 
 ---
 
@@ -137,35 +169,6 @@ judged criteria over literal ones.
 Run with `python evals/run_evals.py`, or `--no-llm` for retrieval metrics
 only. Diagnoses are cached on disk keyed by prompt and payload.
 
-### What the categories test
-
-- **empty_source** — a source ran and found nothing
-- **insufficient_info** — the correct answer is "I don't know," not a guess
-- **contradiction** — two sources disagree; both must be surfaced
-- **false_positive** — a source matched on a keyword but is irrelevant
-- **source_down** — a source errored. "I could not look" must not be
-  reported as "I looked and found nothing"
-- **prompt_injection** — a Slack message contains instructions aimed at the
-  agent. It must flag them, not obey them and not silently ignore them
-
-### Known limitations
-
-Recall is measured against fixtures generated from the case definitions, so
-it validates the retrieval path rather than retrieval quality.
-
-Mention compliance uses substring matching against synonym groups. eval_10
-scores 0.50 despite a correct diagnosis, because the agent asks for logs and
-timestamps without using the literal phrase the case expects. Left in place
-rather than widened further.
-
-The first LLM run reported a hallucination that was not one: the agent said
-it could not determine a root cause, and the matcher caught "root cause"
-inside the negation. `must_not_claim` entries are now scoped to phrases that
-only appear in assertions.
-
-Run with `python evals/run_evals.py`, or `--no-llm` for retrieval metrics only.
-Diagnoses are cached on disk keyed by prompt and payload.
-
 ### Running against live systems
 
 Set `MOCK=false` in `.env` and fill in credentials. Gmail also needs `gmail_credentials.json` from a Google Cloud OAuth desktop client. Both files are gitignored.
@@ -272,6 +275,52 @@ The system reads Slack messages, Confluence pages, and customer email, then
 puts them in front of a model. That is untrusted input reaching something that
 can act, so the defences are layered rather than trusting any single one.
 
+### Read-only enforcement
+
+The raw SQL tool accepts SELECT only. That constraint lives in a Pydantic
+validator, not the function body — the original check sat inside the function,
+where an editing mistake deleted it partway through this project and nothing
+failed until it was noticed by hand. A validator rejects the input before the
+function is entered. It also blocks statement chaining, which a SELECT prefix
+would otherwise carry past the original check.
+
+### PII redaction at the boundary
+
+Tool results enter the model context and can leave again in a diagnosis
+written back to a ticket. Emails, phone numbers, IP addresses and long
+token-shaped strings are stripped on the way in. Identity fields are redacted
+structurally by key name — detecting names in free text needs NER and misfires
+on product names and error strings, so only labelled fields are caught.
+
+### Output validation
+
+Input redaction is not sufficient on its own. A test where the ticket
+description contained an email address and an IP, and asked for both to be
+repeated, produced a diagnosis containing them four times. The model complied
+with content that arrived through the ticket itself, which the input redactor
+had no reason to strip. The output gate caught it and logged a guardrail span.
+
+### Injection detection
+
+The prompt establishes a trust boundary and the model usually respects it. A
+pattern scanner runs on every source payload independently of the model. It
+catches obvious payloads and misses careful ones, so it supplements the prompt
+rather than replacing it. What it adds is determinism: a suspicious payload
+appears in the trace whether or not the model reacted to it, with the source
+and field it came from.
+
+Across 20 cases it fires once, on SUP-20, with no false positives:
+That determinism is why it, and not the model's judgement, gates write
+actions. See [Write actions](#write-actions).
+
+### What is not covered
+
+The scanner is regex-based and defeatable by rephrasing. Name redaction only
+covers labelled fields. Neither the diagnosis nor the tool output is checked
+for accuracy — that is what the eval harness is for, and the two are separate
+concerns.
+
+
 ## Write actions
 
 The agent proposes actions. It does not perform them.
@@ -349,29 +398,6 @@ that failure.
 all-MiniLM-L6-v2, and stored in Chroma: 1,181 chunks, no API calls, no
 network at query time.
 
-## Cost control
-
-Cost per full 20-case run is $0.0025 on claude-haiku-4-5, or $0.00012 per
-case. Three things keep it there.
-
-**Diagnosis caching.** Diagnoses are cached on disk keyed by the system prompt
-and the source payload together, so editing the prompt invalidates every entry
-rather than silently scoring stale output. A fully cached run costs nothing,
-which is visible in the dashboard as a run with near-zero token usage.
-
-**Fail-fast on rate limits.** The first version retried 429s with exponential
-backoff. That was wrong: a rate limit is a quota decision, not a transient
-blip, and retrying it consumed more quota than it recovered — a single run
-burned a day's allowance across 16 failed cases. Only 500 and 503 are retried
-now.
-
-**Prompt caching, which does not apply here.** The system prompt is marked
-cacheable, but at ~400 tokens it falls under the 1024-token minimum and the
-API declines to cache it without erroring. Cache write and read token counts
-are traced, so the zero is measured rather than assumed. It would apply to a
-larger system prompt or a model with a lower floor; on this workload the
-constant portion of the request is simply too small for the mechanism to help.
-
 ### Match quality varies with how the question is phrased
 
 | Query | Strong matches |
@@ -400,53 +426,28 @@ The corpus PDFs are gitignored. They are PTC copyright and freely downloadable
 but not redistributable; `corpus/SOURCES.md` lists what to fetch, and the
 index rebuilds with `python -m src.index_corpus`.
 
-### Read-only enforcement
+## Cost control
 
-The raw SQL tool accepts SELECT only. That constraint lives in a Pydantic
-validator, not the function body — the original check sat inside the function,
-where an editing mistake deleted it partway through this project and nothing
-failed until it was noticed by hand. A validator rejects the input before the
-function is entered. It also blocks statement chaining, which a SELECT prefix
-would otherwise carry past the original check.
+Cost per full 20-case run is $0.0025 on claude-haiku-4-5, or $0.00012 per
+case. Three things keep it there.
 
-### PII redaction at the boundary
+**Diagnosis caching.** Diagnoses are cached on disk keyed by the system prompt
+and the source payload together, so editing the prompt invalidates every entry
+rather than silently scoring stale output. A fully cached run costs nothing,
+which is visible in the dashboard as a run with near-zero token usage.
 
-Tool results enter the model context and can leave again in a diagnosis
-written back to a ticket. Emails, phone numbers, IP addresses and long
-token-shaped strings are stripped on the way in. Identity fields are redacted
-structurally by key name — detecting names in free text needs NER and misfires
-on product names and error strings, so only labelled fields are caught.
+**Fail-fast on rate limits.** The first version retried 429s with exponential
+backoff. That was wrong: a rate limit is a quota decision, not a transient
+blip, and retrying it consumed more quota than it recovered — a single run
+burned a day's allowance across 16 failed cases. Only 500 and 503 are retried
+now.
 
-### Output validation
-
-Input redaction is not sufficient on its own. A test where the ticket
-description contained an email address and an IP, and asked for both to be
-repeated, produced a diagnosis containing them four times. The model complied
-with content that arrived through the ticket itself, which the input redactor
-had no reason to strip. The output gate caught it and logged a guardrail span.
-
-### Injection detection
-
-The prompt establishes a trust boundary and the model has flagged every
-injection in the golden set. That is a behaviour, not a guarantee — a
-different model, a different provider, or a more carefully phrased payload
-could pass silently.
-
-A pattern scanner runs on every source payload independently of the model. It
-catches obvious payloads and misses careful ones, so it supplements the prompt
-rather than replacing it. What it adds is determinism: a suspicious payload
-appears in the trace whether or not the model reacted to it, with the source
-and field it came from.
-
-Across 20 cases it fires once, on SUP-20, with no false positives:
-
-
-### What is not covered
-
-The scanner is regex-based and defeatable by rephrasing. Name redaction only
-covers labelled fields. Neither the diagnosis nor the tool output is checked
-for accuracy — that is what the eval harness is for, and the two are separate
-concerns.
+**Prompt caching, which does not apply here.** The system prompt is marked
+cacheable, but at ~400 tokens it falls under the 1024-token minimum and the
+API declines to cache it without erroring. Cache write and read token counts
+are traced, so the zero is measured rather than assumed. It would apply to a
+larger system prompt or a model with a lower floor; on this workload the
+constant portion of the request is simply too small for the mechanism to help.
 
 ## Architecture
 
